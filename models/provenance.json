@@ -1,0 +1,11 @@
+{
+  "framework": "GeCo2",
+  "repository": "https://github.com/jerpelhan/GECO2",
+  "revision": "b7086c1db5d9bf2a1718b77eb76715c5f5b963cb",
+  "weight_source": "https://huggingface.co/datasets/jerpelhan/geco2-assets/resolve/main/weights/CNTQG_multitrain_ca44.pth",
+  "download_transport": "https://hf-mirror.com",
+  "weight_bytes": 350785678,
+  "sha256": "7841dcfd2d0120e65b40a5c6dd1dfcb014df350a34f320d2fd000dc5f4c005e7",
+  "inference": "trained center response peaks, no SAM mask refinement, box NMS off by default",
+  "runtime": "torch 2.6.0+cu126; torchvision 0.21.0+cu126; Python 3.12"
+}

@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+models/*.pth
+models/*.partial
+models/download_parts/
+outputs/
+release_assets/
+docs/annotation_FSC147_384.json
+docs/ImageClasses_FSC147.txt
+docs/Train_Test_Val_FSC_147.json
+samples/source_catalog.pdf
+samples/reference.jpg
+samples/2.jpg
+samples/catalog_32_*.jpg
+samples/real_cotton_crop.jpg
+.publish-state.json

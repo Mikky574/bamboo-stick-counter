@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>签数 · GeCo2 本地计数</title>
+<style>
+*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;background:#eef3f1;color:#19362d;font:14px 'Microsoft YaHei',sans-serif}header{padding:24px 4%;background:#173d32;color:white;display:flex;justify-content:space-between;align-items:center;gap:15px}h1{margin:0;font-size:27px}header p{color:#aac9ba;margin:8px 0 0}.badge{font-size:12px;background:#ffffff15;border:1px solid #ffffff30;border-radius:20px;padding:9px 15px}main{display:grid;grid-template-columns:300px minmax(0,1fr);gap:20px;padding:22px 4%}.panel,.stage{background:white;border-radius:16px;padding:20px;box-shadow:0 3px 20px #19362d08}label{display:block;margin:15px 0 7px}input[type=number],select{width:100%;padding:9px;border:1px solid #d4dfd9;border-radius:8px;background:white;color:#19362d}input[type=range]{width:100%}button,.upload{border:0;border-radius:8px;padding:10px 12px;background:#e7efea;color:#19362d;cursor:pointer;font:inherit}button.primary,.upload{background:#247c58;color:white}button.primary{width:100%;margin-top:16px}button:disabled{opacity:.5;cursor:wait}.upload{text-align:center;display:block;margin:0}#file{display:none}.count{font-size:52px;font-weight:bold;line-height:1.3}.muted,small{color:#647e71;line-height:1.6}.tools{display:flex;gap:7px;flex-wrap:wrap;margin:14px 0}.tools button.active{background:#247c58;color:white}.viewport{overflow:auto;background:#f4f6f5;border-radius:10px;min-height:360px;text-align:center;touch-action:none}canvas{display:block;margin:auto;cursor:crosshair;height:auto}canvas[hidden]{display:none}#empty{padding:130px 15px}#status{margin-top:12px;font-size:13px;line-height:1.7;min-height:44px}.full{width:100%;margin-top:8px}#examples{font-size:12px;margin:8px 0;color:#956300}.switches{display:flex;gap:15px;flex-wrap:wrap;font-size:12px}.switches label{margin:0}.note{padding:12px;background:#f0f6f2;border-radius:8px;line-height:1.7;font-size:12px}.stat{display:flex;align-items:center;justify-content:space-between;gap:15px}.meta{max-width:70%;font-size:12px;line-height:1.7;text-align:right}details{margin-top:15px}summary{cursor:pointer;color:#647e71}#legacy-panel[hidden],#model-panel[hidden]{display:none}@media(max-width:800px){main{grid-template-columns:1fr}header{align-items:flex-start}.badge{max-width:45%}.panel{padding:18px}.meta{max-width:65%}}
+</style></head><body>
+<header><div><h1>签数 / 端面计数</h1><p>GeCo2 开源计数模型 · 本地推理 · 逐点编号</p></div><span class="badge" id="model-state">正在检查模型…</span></header>
+<main><aside class="panel">
+<label class="upload" for="file">选择图片</label><input id="file" type="file" accept="image/png,image/jpeg,image/webp">
+<button id="bamboo" class="full">加载你的竹签图</button>
+<label for="engine">识别方式</label><select id="engine"><option value="geco2">GeCo2 预训练模型</option><option value="opencv">OpenCV 基线（对照）</option></select>
+<div id="model-panel">
+<div class="note" style="margin-top:12px">先拖动框选 1–3 个完整端面，模型会寻找图中相似的目标。示例是本次识别提示，不会训练模型。</div>
+<div id="examples">已选示例：0 个</div><button id="clear-examples" class="full">清空示例框</button>
+<label for="model-threshold">筛选强度 <span id="threshold-value">0.33</span></label><input id="model-threshold" type="range" min="0.125" max="0.95" step="0.005" value="0.33"><small>调高减少低响应目标，调低找回可能漏检的端面。</small>
+<label for="postprocess">去重方式</label><select id="postprocess"><option value="points">中心点模式 · 关闭框 NMS</option><option value="nms">框 NMS · 对照模式</option></select>
+<label for="nms-iou" id="nms-label" hidden>NMS IoU 阈值</label><input id="nms-iou" type="number" min="0.1" max="0.95" step="0.05" value="0.5" hidden>
+</div>
+<div id="legacy-panel" hidden>
+<label for="diameter">端面直径（原图像素）</label><input id="diameter" type="number" min="4" max="300" value="40">
+<label for="polarity">目标与背景</label><select id="polarity"><option value="bright">浅色目标 / 深色背景</option><option value="dark">深色目标 / 浅色背景</option></select>
+<label for="threshold">亮度阈值（0 = 自动）</label><input id="threshold" type="number" min="0" max="255" value="0">
+<label for="sensitivity">筛选强度</label><input id="sensitivity" type="range" min="0.1" max="1" step="0.05" value="0.45">
+</div>
+<button id="run" class="primary">自动识别并编号</button><div id="status" role="status">加载竹签图即可验证；上传新图后请框选端面示例。</div>
+<details><summary>其他验证图片</summary><button id="real" class="full">真实棉签裁剪图（3 根）</button><button id="full" class="full">完整棉签照片（粘连难例）</button><button id="synthetic" class="full">80 个端面合成图</button></details>
+<hr style="border:0;border-top:1px solid #e2e9e5;margin:18px 0"><small>中心点来自 GeCo2 学习的响应图。仍可能漏检或重复，请人工核对；显示数量是预测值。</small>
+</aside><section class="stage">
+<div class="stat"><div><small>当前标记数量</small><div class="count" id="count">0</div></div><div class="meta muted"><div id="size"></div><div id="result-meta">选择图片后开始识别</div></div></div>
+<div class="tools"><button class="active" data-mode="example">框选端面示例</button><button data-mode="add">点击补点</button><button data-mode="delete">点击删点</button><button id="undo">撤销</button><button id="png">导出标注图</button><button id="json">导出坐标 JSON</button></div>
+<div class="switches"><label><input id="numbers" type="checkbox" checked> 显示编号</label><label><input id="outlines" type="checkbox"> 显示端面轮廓</label><label><input id="show-examples" type="checkbox" checked> 显示示例框</label><button id="zoom-in">放大</button><button id="zoom-out">缩小</button></div>
+<div class="viewport" style="margin-top:12px"><div id="empty">上传照片，框选几个端面，再自动识别。<br><small>所有推理在本机进行，图片不会上传到外部服务。</small></div><canvas id="canvas" hidden></canvas></div>
+</section></main>
+<script>
+const $=id=>document.getElementById(id),canvas=$('canvas'),ctx=canvas.getContext('2d');
+let image=new Image(),data='',points=[],exemplars=[],history=[],mode='example',busy=false,drag=null,zoom=1,meta=null;
+function chooseMode(value){mode=value;document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode))}
+function draw(){if(!data)return;const fit=Math.min(canvas.parentElement.clientWidth-16,900);canvas.style.width=Math.max(1,fit*zoom)+'px';ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(image,0,0);
+ const font=Math.max(10,Math.min(24,canvas.width/65));
+ points.forEach((p,i)=>{if($('outlines').checked){ctx.beginPath();ctx.arc(p.x,p.y,p.r||8,0,Math.PI*2);ctx.strokeStyle='#38eaa3';ctx.lineWidth=Math.max(1,canvas.width/700);ctx.stroke()}
+ ctx.beginPath();ctx.arc(p.x,p.y,Math.max(2,canvas.width/280),0,Math.PI*2);ctx.fillStyle='#32e6a0';ctx.fill();ctx.strokeStyle='#124935';ctx.lineWidth=1;ctx.stroke();
+ if($('numbers').checked){ctx.font=`bold ${font}px sans-serif`;ctx.strokeStyle='#143a2d';ctx.lineWidth=2.5;ctx.strokeText(i+1,p.x+4,p.y-4);ctx.fillStyle='white';ctx.fillText(i+1,p.x+4,p.y-4)}});
+ if($('show-examples').checked)exemplars.forEach((b,i)=>drawBox(b,'#ffba32',`示例 ${i+1}`));if(drag)drawBox([drag.x,drag.y,drag.endX,drag.endY],'#ffba32','');
+ $('count').textContent=points.length;$('examples').textContent=`已选示例：${exemplars.length} 个`;
+}
+function drawBox(b,color,label){ctx.strokeStyle=color;ctx.lineWidth=Math.max(2,canvas.width/350);ctx.strokeRect(b[0],b[1],b[2]-b[0],b[3]-b[1]);if(label){ctx.font=`bold ${Math.max(10,canvas.width/75)}px sans-serif`;ctx.fillStyle=color;ctx.fillText(label,b[0],Math.max(12,b[1]-5))}}
+function remember(){history.push({points:structuredClone(points),exemplars:structuredClone(exemplars),meta:structuredClone(meta)});if(history.length>30)history.shift()}
+function load(url){return new Promise((resolve,reject)=>{let next=new Image();next.onload=()=>{image=next;data=url;points=[];exemplars=[];history=[];meta=null;drag=null;zoom=1;canvas.width=image.width;canvas.height=image.height;canvas.hidden=false;$('empty').hidden=true;$('size').textContent=`${image.width} × ${image.height} px`;$('result-meta').textContent='待识别';draw();chooseMode($('engine').value==='geco2'?'example':'add');$('status').textContent='图片已加载，请框选几个完整端面作为示例。';resolve()};next.onerror=()=>reject(Error('无法读取图片'));next.src=url})}
+function read(file){return new Promise((resolve,reject)=>{let r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(Error('读取失败'));r.readAsDataURL(file)})}
+async function api(path,payload){let r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!r.ok){let e=await r.json();throw Error(e.error||'处理失败')}return r}
+function save(blob,name){let u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
+function manualEdit(){if(meta)meta.manual_edits=(meta.manual_edits||0)+1;$('result-meta').textContent='已人工修改，当前数量以标记为准'}
+function position(e){const r=canvas.getBoundingClientRect();return {x:Math.max(0,Math.min(canvas.width-.01,(e.clientX-r.left)*canvas.width/r.width)),y:Math.max(0,Math.min(canvas.height-.01,(e.clientY-r.top)*canvas.height/r.height))}}
+canvas.onpointerdown=e=>{if(busy||!data)return;const p=position(e);if(mode==='example'){canvas.setPointerCapture(e.pointerId);drag={...p,endX:p.x,endY:p.y};return}
+ if(mode==='add'){remember();points.push({...p,r:+$('diameter').value/2});manualEdit()}else{let nearest=-1,dist=Infinity;points.forEach((q,i)=>{let d=Math.hypot(q.x-p.x,q.y-p.y);if(d<dist){dist=d;nearest=i}});if(nearest>=0&&dist<Math.max(12*canvas.width/canvas.getBoundingClientRect().width,points[nearest].r||8)){remember();points.splice(nearest,1);manualEdit()}}draw()};
+canvas.onpointermove=e=>{if(drag){const p=position(e);drag.endX=p.x;drag.endY=p.y;draw()}};
+canvas.onpointerup=e=>{if(!drag)return;const p=position(e),b=[Math.min(drag.x,p.x),Math.min(drag.y,p.y),Math.max(drag.x,p.x),Math.max(drag.y,p.y)];drag=null;if(b[2]-b[0]>=4&&b[3]-b[1]>=4){if(exemplars.length>=8){$('status').textContent='最多选 8 个示例，可以先清空或撤销。'}else{remember();exemplars.push(b);$('status').textContent=`已选 ${exemplars.length} 个端面示例，可以开始识别。`}}draw()};canvas.onpointercancel=()=>{drag=null;draw()};
+$('file').onchange=async e=>{try{if(busy)return;const f=e.target.files[0];if(f){if(f.size>20*1024*1024)throw Error('图片不能超过 20 MB');await load(await read(f))}}catch(e){$('status').textContent=e.message}};
+async function loadSample(name){try{if(busy)return;let r=await fetch('/sample?name='+name);if(!r.ok){const err=await r.json();throw Error(err.error||'示例图片不可用')}await load(await read(await r.blob()));if(name==='bamboo'){exemplars=[[315,132,360,172],[358,326,405,369],[287,434,332,479]];$('engine').value='geco2';updateEngine();$('status').textContent='已预选 3 个端面示例。本项目未用此图训练模型，点击识别验证。'}else{$('engine').value='opencv';$('diameter').value=name==='synthetic'?40:24;$('threshold').value=name==='synthetic'?0:145;$('sensitivity').value=name==='synthetic'?0.45:0.5;updateEngine();$('status').textContent=name==='synthetic'?'合成图：已知 80 个。':name==='full'?'完整真实照片：已知 7 根，粘连难例。':'真实照片裁剪：已知 3 根。'}draw()}catch(e){$('status').textContent=e.message}}
+for(const name of ['bamboo','real','full','synthetic'])$(name).onclick=()=>loadSample(name);
+function updateEngine(){const isModel=$('engine').value==='geco2';$('model-panel').hidden=!isModel;$('legacy-panel').hidden=isModel;chooseMode(isModel?'example':'add')}$('engine').onchange=updateEngine;
+$('postprocess').onchange=()=>{$('nms-iou').hidden=$('nms-label').hidden=$('postprocess').value==='points'};
+$('model-threshold').oninput=()=>{$('threshold-value').textContent=Number($('model-threshold').value).toFixed(3)};
+$('run').onclick=async()=>{if(!data||busy)return;if($('engine').value==='geco2'&&!exemplars.length){$('status').textContent='请先拖动框选至少一个端面示例。';chooseMode('example');return}busy=true;document.querySelectorAll('aside button,aside input,aside select').forEach(el=>el.disabled=true);$('status').textContent=$('engine').value==='geco2'?'模型正在本地识别，首次运行需要加载权重…':'正在进行 OpenCV 基线检测…';try{
+ const payload={image:data,engine:$('engine').value,exemplars,model_threshold:+$('model-threshold').value,nms_iou:$('postprocess').value==='nms'?+$('nms-iou').value:null,diameter:+$('diameter').value,threshold:+$('threshold').value,polarity:$('polarity').value,sensitivity:+$('sensitivity').value};
+ const result=await(await api('/api/count',payload)).json();remember();points=result.points;meta={...result.meta,automatic_count:result.count,manual_edits:0};draw();$('status').textContent=`识别出 ${points.length} 个目标，请核对漏点和重复点。`;
+ $('result-meta').textContent=meta.framework==='GeCo2'?`${meta.mode==='center_peaks'?'GeCo2 中心点 · 框 NMS 关闭':'GeCo2 框 NMS · 删除 '+meta.nms_removed+' 个候选'} / ${meta.device} / ${meta.cached?"缓存筛选 ":"推理 "}${meta.elapsed_seconds}s`:'OpenCV 基线结果';
+ }catch(e){$('status').textContent=e.message}finally{busy=false;document.querySelectorAll('aside button,aside input,aside select').forEach(el=>el.disabled=false)}};
+document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{if(!busy)chooseMode(b.dataset.mode)});
+$('clear-examples').onclick=()=>{if(!busy&&exemplars.length){remember();exemplars=[];draw()}};
+$('undo').onclick=()=>{if(!busy&&history.length){const old=history.pop();points=old.points;exemplars=old.exemplars;meta=old.meta;draw();$('result-meta').textContent='已撤销，请核对当前标记'}};
+for(const id of ['numbers','outlines','show-examples'])$(id).onchange=draw;
+$('zoom-in').onclick=()=>{zoom=Math.min(3,zoom+.25);draw()};$('zoom-out').onclick=()=>{zoom=Math.max(.5,zoom-.25);draw()};window.addEventListener('resize',draw);
+$('png').onclick=async()=>{if(!data||busy)return;try{save(await(await api('/api/export',{image:data,points})).blob(),'counted.png')}catch(e){$('status').textContent=e.message}};
+$('json').onclick=()=>{if(data&&!busy)save(new Blob([JSON.stringify({count:points.length,width:canvas.width,height:canvas.height,points,exemplars,meta},null,2)],{type:'application/json'}),'points.json')};
+fetch('/api/model-status').then(r=>r.json()).then(s=>{$('model-state').textContent=s.weights_ready?`GeCo2 就绪 / ${s.gpu}`:'GeCo2 权重尚未安装'}).catch(()=>{$('model-state').textContent='无法检查模型状态'});
+</script></body></html>

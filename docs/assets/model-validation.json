@@ -1,0 +1,22 @@
+{
+  "point_count": 96,
+  "box_nms_count": 96,
+  "nms_removed": 0,
+  "meta": {
+    "before_nms": 96,
+    "cached": false,
+    "candidate_count": 136,
+    "device": "cuda",
+    "elapsed_seconds": 3.556,
+    "framework": "GeCo2",
+    "mode": "center_peaks",
+    "nms_iou": null,
+    "nms_removed": 0,
+    "refinement": "disabled",
+    "score_type": "relative_center_response",
+    "threshold": 0.33
+  },
+  "ground_truth": null,
+  "accuracy_verified": false,
+  "note": "User-image inference smoke test. Predicted count is not verified ground truth."
+}
