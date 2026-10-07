@@ -82,6 +82,13 @@ https://pub-mediabox-storage.rxweb-prd.com/exhibitor/document/exh-14651c2f-63d7-
 
 原目录与提取图片在 samples 中，仅作本地验证，权利归原作者。real_cotton_crop.jpg 裁剪范围：x=135:260，y=35:145。木材参考图来自 https://github.com/LelandYan/Image_processing ，未作为竹签验证证据；没有复制该仓库代码。
 
+## 后续模型设计
+
+客户侧目标为上传后全自动计数，不要求选择品类、框选示例或调整强度。新模型尚在设计阶段，当前页面仍运行上述 GeCo2 与 OpenCV 基线。
+
+- [签类计数模型与算法框架设计](doc/签类计数模型与算法框架设计.md)：点预测、一对一训练、棉头粘连、分块去重、实验路线及数据来源。
+- [签类全自动计数系统设计稿](doc/签类全自动计数系统设计稿.md)：产品范围、自动处理流程、部署与验收。
+
 ## 开源来源
 
 - GeCo2：https://github.com/jerpelhan/GECO2

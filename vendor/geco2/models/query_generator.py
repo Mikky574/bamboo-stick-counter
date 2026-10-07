@@ -110,7 +110,8 @@ class C_base(nn.Module):
         """
 
         """
-        if self.spatial_shapes.device != image_embeddings.device:
+        if (self.spatial_shapes.device != image_embeddings.device
+                or not hasattr(self, 'reference_points')):
             self.spatial_shapes = self.spatial_shapes.to(image_embeddings.device)
             self.spatial_shapes1 = self.spatial_shapes1.to(image_embeddings.device)
             self.spatial_shapes2 = self.spatial_shapes2.to(image_embeddings.device)
