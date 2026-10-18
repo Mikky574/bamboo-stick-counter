@@ -1,0 +1,9 @@
+{
+  "model": "torchvision.convnext_small",
+  "weights": "IMAGENET1K_V1",
+  "url": "https://download.pytorch.org/models/convnext_small-0c510722.pth",
+  "sha256": "0c510722adfd92966a2bd72b92f785ca05966bbac03cafe2f7a90b1f54bfab9a",
+  "bytes": 201014929,
+  "torchvision": "0.21.0",
+  "source": "https://github.com/pytorch/vision/blob/v0.21.0/torchvision/models/convnext.py"
+}

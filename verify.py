@@ -39,7 +39,7 @@ def run():
         assert maxerr<8,(name,maxerr)
         write_image(str(ROOT/'outputs'/f'{name}_annotated.png'),annotate(img,pts))
         raw='data:image/png;base64,'+base64.b64encode(cv2.imencode('.png',img)[1]).decode()
-        r=client.post('/api/count',json=dict(image=raw,diameter=d,threshold=t,sensitivity=s))
+        r=client.post('/api/count',json=dict(image=raw,engine='opencv',diameter=d,threshold=t,sensitivity=s))
         assert r.status_code==200 and r.json['count']==len(gt)
         r=client.post('/api/export',json=dict(image=raw,points=pts));assert r.status_code==200
         assert cv2.imdecode(np.frombuffer(r.data,np.uint8),cv2.IMREAD_COLOR).shape==img.shape

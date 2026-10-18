@@ -31,6 +31,10 @@ def detect(image, diameter=24, polarity='bright', threshold=0, sensitivity=0.45)
 def annotate(image,points):
     out=image.copy()
     for i,p in enumerate(points,1):
+        segment=p.get('segment')
+        if segment and len(segment)==2:
+            a,b=segment
+            cv2.line(out,(int(a[0]),int(a[1])),(int(b[0]),int(b[1])),(0,210,80),2,cv2.LINE_AA)
         x,y=int(p['x']),int(p['y']); r=max(4,int(p.get('r',8)))
         cv2.circle(out,(x,y),r,(0,220,90),2)
         cv2.putText(out,str(i),(x+3,y-3),cv2.FONT_HERSHEY_SIMPLEX,.4,(0,0,0),3,cv2.LINE_AA)

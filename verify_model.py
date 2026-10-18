@@ -23,7 +23,7 @@ nms = client.post('/api/count',json={**payload,'nms_iou':.5})
 assert nms.status_code == 200
 assert nms.json['count']<=points['count']
 assert nms.json['meta']['nms_removed']==points['count']-nms.json['count']
-assert nms.json['meta']['cached']
+assert nms.json['meta']['worker_exited']
 for invalid in [[], [[0,0,1,1]], [[0,0,9999,9999]], [[float('nan'),0,20,20]]]:
     assert client.post('/api/count',json={**payload,'exemplars':invalid}).status_code==400
 assert client.post('/api/count',json={**payload,'model_threshold':-1}).status_code==400

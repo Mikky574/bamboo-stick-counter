@@ -1,0 +1,49 @@
+diff --git a/groundingdino/util/get_tokenlizer.py b/groundingdino/util/get_tokenlizer.py
+index 77873bc..f91365a 100644
+--- a/groundingdino/util/get_tokenlizer.py
++++ b/groundingdino/util/get_tokenlizer.py
+@@ -22,6 +22,9 @@ def get_tokenlizer(text_encoder_type):
+ 
+ def get_pretrained_language_model(text_encoder_type):
+     if text_encoder_type == "bert-base-uncased" or (os.path.isdir(text_encoder_type) and os.path.exists(text_encoder_type)):
++        if os.environ.get('COUNTGDPP_FULL_CHECKPOINT') == '1':
++            from transformers import BertConfig
++            return BertModel(BertConfig.from_pretrained(text_encoder_type, local_files_only=True))
+         return BertModel.from_pretrained(text_encoder_type)
+     if text_encoder_type == "roberta-base":
+         return RobertaModel.from_pretrained(text_encoder_type)
+diff --git a/models/GroundingDINO/ms_deform_attn.py b/models/GroundingDINO/ms_deform_attn.py
+index 9d0877d..178fd2b 100644
+--- a/models/GroundingDINO/ms_deform_attn.py
++++ b/models/GroundingDINO/ms_deform_attn.py
+@@ -29,6 +29,7 @@ try:
+     # from groundingdino import _C
+     import MultiScaleDeformableAttention as _C
+ except:
++    _C = None
+     warnings.warn("Failed to load custom C++ ops. Running on CPU mode Only!")
+ 
+ 
+@@ -328,7 +329,7 @@ class MultiScaleDeformableAttention(nn.Module):
+                 )
+             )
+     
+-        if torch.cuda.is_available() and value.is_cuda:
++        if _C is not None and torch.cuda.is_available() and value.is_cuda:
+             halffloat = False
+             if value.dtype == torch.float16:
+                 halffloat = True
+diff --git a/util/get_tokenlizer.py b/util/get_tokenlizer.py
+index 77873bc..f91365a 100644
+--- a/util/get_tokenlizer.py
++++ b/util/get_tokenlizer.py
+@@ -22,6 +22,9 @@ def get_tokenlizer(text_encoder_type):
+ 
+ def get_pretrained_language_model(text_encoder_type):
+     if text_encoder_type == "bert-base-uncased" or (os.path.isdir(text_encoder_type) and os.path.exists(text_encoder_type)):
++        if os.environ.get('COUNTGDPP_FULL_CHECKPOINT') == '1':
++            from transformers import BertConfig
++            return BertModel(BertConfig.from_pretrained(text_encoder_type, local_files_only=True))
+         return BertModel.from_pretrained(text_encoder_type)
+     if text_encoder_type == "roberta-base":
+         return RobertaModel.from_pretrained(text_encoder_type)

@@ -1,4 +1,10 @@
 .venv/
+.venv-countgdpp/
+vendor/countgdpp/
+models/countgdpp/
+models/scene_classifier/*/model.safetensors
+models/scene_classifier/**/*.pth
+models/scene_classifier/**/*.pt
 __pycache__/
 *.pyc
 models/*.pth
@@ -15,3 +21,21 @@ samples/2.jpg
 samples/catalog_32_*.jpg
 samples/real_cotton_crop.jpg
 .publish-state.json
+
+# Downloaded/training corpora stay local; keep their collection code and notes.
+/samples/*
+!/samples/*.py
+!/samples/SOURCES.md
+/datasets/*
+!/datasets/README.md
+
+# Local training and optional model metadata; current release files are explicit.
+/models/scene_classifier/*
+!/models/scene_classifier/active_profile.json
+!/models/scene_classifier/convnext_small_v1/
+/models/scene_classifier/convnext_small_v1/*
+!/models/scene_classifier/convnext_small_v1/pretrained_provenance.json
+!/models/scene_classifier/convnext_small_v2/
+/models/scene_classifier/convnext_small_v2/*
+!/models/scene_classifier/convnext_small_v2/profile.json
+!/models/scene_classifier/convnext_small_v2/training_report.json

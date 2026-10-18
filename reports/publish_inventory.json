@@ -1,0 +1,256 @@
+{
+  "generated_date": "2026-10-18",
+  "purpose": "Read-only publication inventory. Relative paths only. No files moved, deleted, staged or uploaded by this audit.",
+  "snapshot": {
+    "tracked_files": 173,
+    "tracked_worktree_bytes": 3906720,
+    "tracked_plus_unignored_files": 895,
+    "tracked_plus_unignored_bytes": 244262313,
+    "directory_totals": {
+      "<root>": {
+        "files": 71,
+        "bytes": 393476
+      },
+      "datasets": {
+        "files": 67,
+        "bytes": 58080887
+      },
+      "doc": {
+        "files": 11,
+        "bytes": 73024
+      },
+      "docs": {
+        "files": 4,
+        "bytes": 172738
+      },
+      "models": {
+        "files": 27,
+        "bytes": 2294596656
+      },
+      "outputs": {
+        "files": 895,
+        "bytes": 890745796
+      },
+      "samples": {
+        "files": 575,
+        "bytes": 180615291
+      },
+      "templates": {
+        "files": 1,
+        "bytes": 32302
+      },
+      "tools": {
+        "files": 2,
+        "bytes": 16991
+      },
+      "vendor": {
+        "files": 263,
+        "bytes": 55010706
+      }
+    }
+  },
+  "files_over_50mb": [
+    {
+      "path": "models/countgdpp/countgd_plusplus.pth",
+      "bytes": 1250122586,
+      "over_100mb": true
+    },
+    {
+      "path": "models/CNTQG_multitrain_ca44.pth",
+      "bytes": 350785678,
+      "over_100mb": true
+    },
+    {
+      "path": "models/scene_classifier/convnext_small_v1/convnext_small_imagenet1k.pth",
+      "bytes": 201014929,
+      "over_100mb": true
+    },
+    {
+      "path": "models/scene_classifier/convnext_small_v1/scene_convnext_small.pt",
+      "bytes": 197954094,
+      "over_100mb": true
+    },
+    {
+      "path": "models/scene_classifier/convnext_small_v2/scene_convnext_small.pt",
+      "bytes": 197954094,
+      "over_100mb": true
+    },
+    {
+      "path": "outputs/scene_training_convnext_20261018/scene_convnext_small.pt",
+      "bytes": 197954094,
+      "over_100mb": true
+    },
+    {
+      "path": "outputs/scene_training_convnext_v2_20261018/scene_convnext_small.pt",
+      "bytes": 197954094,
+      "over_100mb": true
+    },
+    {
+      "path": "outputs/scene_training_convnext_20261018/best_training.pt",
+      "bytes": 197950058,
+      "over_100mb": true
+    },
+    {
+      "path": "outputs/scene_training_convnext_v2_20261018/best_training.pt",
+      "bytes": 197950058,
+      "over_100mb": true
+    },
+    {
+      "path": "models/scene_classifier/tinyclip_vit_8m16_text3m_yfcc15m/model.safetensors",
+      "bytes": 93812468,
+      "over_100mb": false
+    }
+  ],
+  "model_release": {
+    "minimum_current_runtime_weights": [
+      "models/countgdpp/countgd_plusplus.pth",
+      "models/scene_classifier/convnext_small_v2/scene_convnext_small.pt"
+    ],
+    "minimum_weight_bytes": 1448076680,
+    "also_required": [
+      "models/countgdpp/bert-base-uncased/",
+      "models/countgdpp/provenance.json",
+      "models/scene_classifier/active_profile.json",
+      "models/scene_classifier/convnext_small_v2/profile.json",
+      "models/scene_classifier/convnext_small_v2/training_report.json"
+    ],
+    "optional_legacy": [
+      "models/CNTQG_multitrain_ca44.pth",
+      "models/scene_classifier/convnext_small_v1/",
+      "models/scene_classifier/tinyclip_vit_8m16_text3m_yfcc15m/"
+    ],
+    "exclude": [
+      "outputs/scene_training_convnext_20261018/",
+      "outputs/scene_training_convnext_v2_20261018/"
+    ],
+    "note": "Keep large neural checkpoints as versioned Release assets with SHA-256/provenance; do not add them as ordinary Git blobs. Do not include virtual environments or GPU-driver binaries. Check upstream model terms separately from the upstream source-code license."
+  },
+  "recommended_source_control": {
+    "keep": [
+      "application source",
+      "templates",
+      "requirements",
+      "setup/start/stop scripts",
+      "maintained documentation",
+      "model profile/provenance JSON",
+      "generated/mock-only regression tests"
+    ],
+    "local_only_unless_rights_reviewed": [
+      "samples/web_validation/",
+      "samples/real_dataset_v1/",
+      "samples/flat_rods_eval_20261018/",
+      "samples/counting_eval/",
+      "samples/application_eval_20261018/",
+      "samples/dense_cases/",
+      "datasets/*.zip",
+      "datasets/end_head_counting_v1/images/"
+    ],
+    "research_manifests_without_image_bytes": [
+      "datasets/scene_classification_v1/manifest.json",
+      "datasets/scene_classification_v2/manifest.json",
+      "sample acquisition scripts and URL/license manifests"
+    ],
+    "attribution_ready_subset_candidates": [
+      "samples/scene_training_v2_particles_20261018/accepted_manifest.json",
+      "samples/scene_training_v2_rods_20261018/accepted_manifest.json"
+    ],
+    "user_supplied_development_photos": [
+      "samples/carded_rods_regression_20261018/",
+      "samples/packaged_rods_regression_20261018/",
+      "samples/dense_grain_regression_20261018/"
+    ],
+    "user_photo_note": "The task authorizes publication, but user-supplied describes provenance rather than confirming original photographic copyright. Avoid publishing unnecessary photo fixtures; public core tests do not need them.",
+    "never_publish": [
+      ".venv/",
+      ".venv-countgdpp/",
+      "outputs/",
+      "release_assets/",
+      ".publish-state.json",
+      "unfiltered cached source HTML",
+      "duplicate training checkpoints"
+    ]
+  },
+  "image_rights_findings": [
+    {
+      "path": "samples/flat_rods_eval_20261018/README.md",
+      "finding": "Explicitly states all licenses unverified and warns against redistributable training dataset publication."
+    },
+    {
+      "path": "datasets/scene_classification_v2/manifest.json",
+      "finding": "143 scene examples; 59 have explicit unverified/local-research-only source_license descriptions; 84 have no source_license key. Some of the latter preserve Commons licensing elsewhere, so absence alone is not a prohibition."
+    },
+    {
+      "path": "samples/scene_training_v2_particles_20261018/README.md",
+      "finding": "24 accepted Commons photos preserve author/source/license metadata; rejected candidate/contact images must not be indiscriminately bundled."
+    },
+    {
+      "path": "samples/scene_training_v2_rods_20261018/README.md",
+      "finding": "18 accepted photos preserve explicit Commons attribution. Two product-photo candidates have unverified rights and are excluded from accepted_manifest."
+    },
+    {
+      "path": "datasets/scene_classification_v2_20261018.zip",
+      "finding": "Contains 144 image files and mixes sources. Do not release the archive as-is simply because it is small enough."
+    }
+  ],
+  "public_smoke": {
+    "core_modules": [
+      "verify_runtime_safety",
+      "verify_worker_timeout",
+      "verify_probe_selection",
+      "verify_scene_classifier",
+      "verify_geometry_budget",
+      "verify_startup_residency"
+    ],
+    "command": "python -m unittest verify_runtime_safety verify_worker_timeout verify_probe_selection verify_scene_classifier verify_geometry_budget verify_startup_residency -q",
+    "validation": "35 tests passed on audit run; 9.095 seconds; no neural weights/GPU required.",
+    "torch_cpu_modules": [
+      "verify_model_startup",
+      "verify_rice_prompt_fallback"
+    ],
+    "torch_cpu_command": "python -m unittest verify_model_startup verify_rice_prompt_fallback -q",
+    "torch_cpu_note": "Requires torch and torchvision, but uses only scripted CPU tensors and mocks; no model downloads/GPU allocation.",
+    "frontend_command": "node verify_frontend.cjs",
+    "frontend_note": "Generated fake DOM behavioral checks, not real browser visual verification.",
+    "synthetic_optional": "python verify.py creates the 80-disc synthetic sample; real-photo branches are optional.",
+    "historical_photo_modules": [
+      "verify_application_cases",
+      "verify_smart",
+      "verify_runtime_rice",
+      "verify_packaged_rods",
+      "verify_carded_rods",
+      "verify_rod_surfaces",
+      "verify_rod_routing"
+    ],
+    "not_smoke": [
+      "verify_auto.py",
+      "verify_samples.py",
+      "verify_model.py"
+    ],
+    "split_candidates": {
+      "verify_rod_surfaces": "Only test_user_decorated_review_photo_keeps_ten_rods_through_image_only_api needs a downloaded photo; the other methods generate pixels.",
+      "verify_rod_routing": "Only test_real_end_face_photos_do_not_become_whole_rod_counts needs downloaded photos; other methods mock/generate inputs."
+    }
+  },
+  "ignored_output_test_dependencies": [
+    {
+      "test": "verify_runtime_rice.py:85",
+      "dependency": "outputs/automatic_validation/rice_gray.json",
+      "bytes": 886,
+      "recommendation": "If retaining this historical regression publicly, copy sanitized immutable evidence into samples/regression_predictions and change the test reference."
+    },
+    {
+      "test": "verify_smart.py:218",
+      "dependency": "outputs/smart_validation/rice_touching_probe.json",
+      "bytes": 4531,
+      "recommendation": "If retaining this historical regression publicly, copy sanitized immutable evidence into samples/regression_predictions and change the test reference."
+    }
+  ],
+  "privacy": {
+    "credential_scan": "No matches for GitHub access-token prefixes, PEM private-key headers, OpenAI-key prefixes, AWS access keys or credential-bearing HTTP URLs in scanned nonbinary project files. This is a pattern scan, not a security guarantee. Values were not printed.",
+    "real_user_path": [
+      "samples/carded_rods_regression_20261018/independent_visible_reference.json:2"
+    ],
+    "recommendation": "Replace original clipboard absolute path with a relative fixture path or user-supplied original before publishing. Other drive-path hits are chiefly Windows font/system paths; raw Commons API JSON can contain URL/wikitext false positives. Keep log and process-state outputs ignored."
+  },
+  "history_large_blob_audit": "No blobs larger than 50 MB found in currently reachable Git history."
+}

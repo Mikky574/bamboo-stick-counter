@@ -1,0 +1,134 @@
+{
+  "best_epoch": {
+    "phase": "last_stage",
+    "epoch": 9
+  },
+  "validation": {
+    "n": 23,
+    "accuracy": 0.95652174949646,
+    "macro_recall": 0.9375,
+    "per_class": {
+      "flat_end": {
+        "n": 2,
+        "correct": 2,
+        "accuracy": 1.0
+      },
+      "sharp": {
+        "n": 3,
+        "correct": 3,
+        "accuracy": 1.0
+      },
+      "laid_rods": {
+        "n": 4,
+        "correct": 4,
+        "accuracy": 1.0
+      },
+      "cotton": {
+        "n": 2,
+        "correct": 1,
+        "accuracy": 0.5
+      },
+      "rice": {
+        "n": 5,
+        "correct": 5,
+        "accuracy": 1.0
+      },
+      "mung": {
+        "n": 3,
+        "correct": 3,
+        "accuracy": 1.0
+      },
+      "coins": {
+        "n": 2,
+        "correct": 2,
+        "accuracy": 1.0
+      },
+      "other": {
+        "n": 2,
+        "correct": 2,
+        "accuracy": 1.0
+      }
+    },
+    "represented_classes": 8
+  },
+  "calibration": {
+    "temperature": 0.5,
+    "min_score": 0.55,
+    "min_margin": 0.1,
+    "selection": "validation_only_maximum_coverage_with_observed_precision_at_least_0.9",
+    "predeclared_minimum_score": 0.55,
+    "predeclared_minimum_margin": 0.1,
+    "calibration_samples": 23,
+    "not_a_probability_guarantee": true
+  },
+  "validation_routing": {
+    "n": 23,
+    "accepted": 19,
+    "rejected": 4,
+    "accepted_correct": 19,
+    "accepted_precision": 1.0,
+    "known_class_coverage": 0.9047619104385376
+  },
+  "test": {
+    "n": 32,
+    "accuracy": 0.96875,
+    "macro_recall": 0.9583333358168602,
+    "per_class": {
+      "flat_end": {
+        "n": 3,
+        "correct": 2,
+        "accuracy": 0.6666666865348816
+      },
+      "sharp": {
+        "n": 1,
+        "correct": 1,
+        "accuracy": 1.0
+      },
+      "laid_rods": {
+        "n": 13,
+        "correct": 13,
+        "accuracy": 1.0
+      },
+      "cotton": {
+        "n": 1,
+        "correct": 1,
+        "accuracy": 1.0
+      },
+      "rice": {
+        "n": 4,
+        "correct": 4,
+        "accuracy": 1.0
+      },
+      "mung": {
+        "n": 5,
+        "correct": 5,
+        "accuracy": 1.0
+      },
+      "coins": {
+        "n": 3,
+        "correct": 3,
+        "accuracy": 1.0
+      },
+      "other": {
+        "n": 2,
+        "correct": 2,
+        "accuracy": 1.0
+      }
+    },
+    "represented_classes": 8
+  },
+  "test_routing": {
+    "n": 32,
+    "accepted": 28,
+    "rejected": 4,
+    "accepted_correct": 28,
+    "accepted_precision": 1.0,
+    "known_class_coverage": 0.9333333373069763
+  },
+  "elapsed_seconds": 130.021,
+  "total_parameters": 49460840,
+  "trainable_last_phase": 14297096,
+  "gpu_max_allocated_gib": 0.41918468475341797,
+  "gpu_max_reserved_gib": 0.505859375,
+  "caveat": "Small source-group split; test not used for checkpoint or threshold selection; no general accuracy guarantee."
+}

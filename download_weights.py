@@ -1,5 +1,6 @@
 """Download and verify the public GeCo2 checkpoint; never uploads images."""
 import hashlib
+import argparse
 from pathlib import Path
 import requests
 ROOT=Path(__file__).parent
@@ -9,6 +10,9 @@ URL_PATH='/datasets/jerpelhan/geco2-assets/resolve/main/weights/CNTQG_multitrain
 def checksum(path):
  with path.open('rb') as f:return hashlib.file_digest(f,'sha256').hexdigest()
 def main():
+ parser=argparse.ArgumentParser(description=__doc__)
+ parser.add_argument('--proxy',help='Optional HTTP/SOCKS proxy used only for this download')
+ args=parser.parse_args()
  TARGET.parent.mkdir(exist_ok=True)
  if TARGET.exists() and checksum(TARGET)==EXPECTED:
   print('GeCo2 weights already present; SHA-256 verified.');return
@@ -21,6 +25,7 @@ def main():
  for url in urls:
   try:
    session=requests.Session();session.trust_env=False
+   if args.proxy:session.proxies.update({'http':args.proxy,'https':args.proxy})
    with session.get(url,stream=True,timeout=(15,60)) as response:
     response.raise_for_status();downloaded=0
     with temp.open('wb') as output:

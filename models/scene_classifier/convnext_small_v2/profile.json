@@ -1,0 +1,9 @@
+{
+  "architecture": "convnext_small",
+  "model_id": "project/ConvNeXt-Small-scene-v2",
+  "checkpoint": "models/scene_classifier/convnext_small_v2/scene_convnext_small.pt",
+  "sha256": "2f953daafdbcac755fac1e2a26f5ca11b6394c4495020f92c99df54aa5a2201f",
+  "status": "active_local_experiment",
+  "dataset_manifest_sha256": "25ccb31f0619b21c5a64c5e03c4ea61d056723d0637b09c2cc09de6b81b60e8e",
+  "limitation": "Scene routing only, not counting accuracy; fresh test is only 4 photos from 2 source groups."
+}

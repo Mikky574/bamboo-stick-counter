@@ -1,0 +1,13 @@
+*.py text eol=lf
+*.md text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.txt text eol=lf
+*.ps1 text eol=lf
+*.cmd text eol=crlf
+# These small metadata/notices are included byte-for-byte in model manifests.
+models/**/*.json -text whitespace=cr-at-eol
+docs/licenses/* -text whitespace=-blank-at-eol
+docs/patches/*.patch -text whitespace=-blank-at-eol

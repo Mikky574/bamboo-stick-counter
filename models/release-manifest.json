@@ -1,0 +1,110 @@
+{
+  "format_version": 1,
+  "repository": "Mikky574/bamboo-stick-counter",
+  "tag": "v0.2.0",
+  "archive_format": "zip-stored-deterministic-v1",
+  "assets": [
+    {
+      "name": "countgdpp-models-v0.2.0.zip",
+      "bytes": 1250835780,
+      "sha256": "18378d878f3faa17a60967132a940e1852fb369eee2a213653d95473471dd3cc",
+      "required": true,
+      "files": {
+        "docs/licenses/BERT-APACHE-2.0.txt": {
+          "bytes": 11358,
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        "docs/licenses/COUNTGDPP-MIT.txt": {
+          "bytes": 1095,
+          "sha256": "a03e036edacdf2c82c7cc56055e5d1a07fa47906a5a8d49fbc8d3bcbe42e9c1e"
+        },
+        "models/countgdpp/bert-base-uncased/config.json": {
+          "bytes": 570,
+          "sha256": "7160e1553ad2ca51d8c1cb066be533db31826e12d173824c1bb0cb1a4f187d20"
+        },
+        "models/countgdpp/bert-base-uncased/tokenizer.json": {
+          "bytes": 466062,
+          "sha256": "ce64fce797c24f68df90b40a3f74f579b336a493db14bd583fd520ea0d8c9a98"
+        },
+        "models/countgdpp/bert-base-uncased/tokenizer_config.json": {
+          "bytes": 48,
+          "sha256": "a025160ef0431f1a392f6f050c1310f4c5d9fb6f275932dbccba73c4d214bf10"
+        },
+        "models/countgdpp/bert-base-uncased/vocab.txt": {
+          "bytes": 231508,
+          "sha256": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3"
+        },
+        "models/countgdpp/countgd_plusplus.pth": {
+          "bytes": 1250122586,
+          "sha256": "b89395d79711c9b9f13f3ef80cd2e528386fb1d70453f99443be4eccab33592f"
+        },
+        "models/countgdpp/provenance.json": {
+          "bytes": 1267,
+          "sha256": "63f490522e70cb33b55c66154acf11b9cfdc19b4a9ac2de4382b4991798eaeca"
+        }
+      },
+      "url": "https://github.com/Mikky574/bamboo-stick-counter/releases/download/v0.2.0/countgdpp-models-v0.2.0.zip"
+    },
+    {
+      "name": "scene-models-v0.2.0.zip",
+      "bytes": 197960964,
+      "sha256": "d4078b37905fb7e42186172f3295fe40e95aa98d3c1c1b4e35f3db6f5b7d86c6",
+      "required": true,
+      "files": {
+        "docs/licenses/TORCHVISION-v0.21.0-BSD-3-Clause.txt": {
+          "bytes": 1517,
+          "sha256": "6502f676851cfe25f8af75531dfb32375b7325b73c37e7b43741fa422893e71d"
+        },
+        "models/scene_classifier/active_profile.json": {
+          "bytes": 500,
+          "sha256": "bfb447daa68a67c2ccb1774a49740f26e2586d9990931eb2094ca31b9b6dd135"
+        },
+        "models/scene_classifier/convnext_small_v1/pretrained_provenance.json": {
+          "bytes": 371,
+          "sha256": "d708cbac275e7f3288d38ad6d3dbe9084ff07c379433eab445f884a27b38c9d1"
+        },
+        "models/scene_classifier/convnext_small_v2/profile.json": {
+          "bytes": 500,
+          "sha256": "bfb447daa68a67c2ccb1774a49740f26e2586d9990931eb2094ca31b9b6dd135"
+        },
+        "models/scene_classifier/convnext_small_v2/scene_convnext_small.pt": {
+          "bytes": 197954094,
+          "sha256": "2f953daafdbcac755fac1e2a26f5ca11b6394c4495020f92c99df54aa5a2201f"
+        },
+        "models/scene_classifier/convnext_small_v2/training_report.json": {
+          "bytes": 2820,
+          "sha256": "40e07c7119ee7c12c2d4e3f26cb162fbc8062322e59fb708935f64de5781746e"
+        }
+      },
+      "url": "https://github.com/Mikky574/bamboo-stick-counter/releases/download/v0.2.0/scene-models-v0.2.0.zip"
+    }
+  ],
+  "excluded": [
+    "Python environments",
+    "vendor checkouts",
+    "training images",
+    "old GeCo2 checkpoint",
+    "old scene v1 checkpoint",
+    "ImageNet initialization checkpoint",
+    "optional TinyCLIP checkpoint"
+  ],
+  "sources": {
+    "countgdpp": {
+      "repository": "https://github.com/niki-amini-naieni/CountGDPlusPlus",
+      "commit": "8489f836d75eb407ae778c56cff1f72cc6f8baae",
+      "checkpoint": "https://drive.google.com/file/d/1j6N22TtKu2NVcKpgfrf-sJHGeLDqs9hs/view",
+      "code_license": "MIT; pretrained data and upstream notices retain their terms"
+    },
+    "bert": {
+      "repository": "https://huggingface.co/google-bert/bert-base-uncased",
+      "license": "Apache-2.0",
+      "scope": "config and tokenizer only; BERT weights are in CountGD checkpoint"
+    },
+    "scene": {
+      "architecture": "torchvision ConvNeXt-Small",
+      "project_model": "project/ConvNeXt-Small-scene-v2",
+      "torchvision_code_license": "BSD-3-Clause",
+      "note": "Project fine-tuning; no training images or new license grant for upstream weights."
+    }
+  }
+}
