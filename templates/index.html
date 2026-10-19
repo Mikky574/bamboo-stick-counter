@@ -37,6 +37,8 @@ footer{display:flex;justify-content:space-between;gap:12px;border-top:1px solid 
 @media(max-width:1100px){.editing-workspace[data-editing="true"]{grid-template-columns:minmax(0,1fr)}.exemplar-inspector{border-left:0;border-top:1px solid #e5eaf2;display:grid;grid-template-columns:132px minmax(0,1fr);gap:10px 16px;padding:16px 18px}.inspector-heading{grid-column:1/-1}.exemplar-slots{grid-column:2;grid-row:2;align-self:start}.exemplar-slot{min-height:52px;flex-direction:row;flex-wrap:wrap;gap:4px;padding:4px}.exemplar-slot[aria-pressed="true"]{padding:3px}.exemplar-slot canvas{width:27px;height:27px}.exemplar-slot span{height:27px;width:22px;font-size:18px}.exemplar-slot small{font-size:10px}.exemplar-closeup{grid-column:1;grid-row:2/5;width:132px}.range-controls{grid-column:2;grid-row:3}.range-controls p{font-size:10px;margin-top:3px}.range-controls p br{display:none}.range-slider{margin-top:5px}.editor-secondary-actions{grid-column:2;grid-row:4;margin:0}.editor-guide{gap:7px;padding:11px 15px;font-size:10px}.editor-guide b{margin-right:3px}.editor-guide .editor-quiet{font-size:10px;padding:6px}.editor-bottom{gap:12px;padding:13px 16px}}
 @media(max-width:680px){.image-area{height:460px;min-height:340px;padding:12px}.exemplar-panel{padding:11px 15px}.exemplar-intro{font-size:10px}.exemplar-enable{font-size:12px;min-height:32px}.editor-guide{flex-wrap:wrap;gap:6px;font-size:10px;padding:10px 12px}.editor-guide b{width:17px;height:17px;font-size:9px}.editor-guide .editor-quiet{font-size:10px;margin-left:auto;min-height:32px}.exemplar-inspector{grid-template-columns:100px minmax(0,1fr);padding:13px 12px;gap:8px 12px}.exemplar-closeup{width:100px;align-self:start;min-height:110px}.closeup-label{font-size:8px;padding:4px}#exemplar-empty{font-size:10px;padding:4px}#exemplar-empty small{font-size:8px}.exemplar-slots{gap:4px}.exemplar-slot{min-height:42px}.exemplar-slot canvas{width:22px;height:22px}.exemplar-slot small{font-size:9px}.range-slider button{min-width:40px;min-height:40px}.range-slider input{min-height:36px}.range-controls p{font-size:9px}.editor-secondary-actions button{min-height:40px;font-size:10px}.editor-bottom{flex-direction:column;align-items:stretch;gap:11px;padding:13px 15px}.editor-bottom #run-exemplars{width:100%;min-height:44px}.view-tools{bottom:11px;padding:4px;gap:1px}.view-tools button{min-height:40px;min-width:38px}.editor-legend{font-size:9px}.preview-foot{min-height:54px}}
 @media(max-width:390px){.exemplar-intro{display:none}.editor-guide{gap:4px}.editor-guide .editor-quiet{margin-left:0}.exemplar-inspector{grid-template-columns:88px minmax(0,1fr);gap:8px}.exemplar-closeup{width:88px}.exemplar-slot{flex-direction:column}.exemplar-slot canvas{width:24px;height:24px}.exemplar-slot span{height:24px}.range-heading{font-size:11px}}
+.exemplar-polarity{display:flex;gap:8px;padding:0 18px 10px}.exemplar-polarity button{width:auto;flex:1;justify-content:space-between;gap:8px;padding:10px 12px;background:#fff;color:#70809d;border:1px solid #dce4f3;font-size:11px;box-shadow:none;white-space:nowrap}.exemplar-polarity button:hover:not(:disabled){transform:none;background:#eef3ff}.exemplar-polarity button[aria-pressed="true"]{border-color:#315bc4;background:#eaf0ff;color:#315bc4}.exemplar-polarity button#exemplar-negative[aria-pressed="true"]{border-color:#b94b43;background:#fceeea;color:#a9433c}.exemplar-polarity button:disabled{opacity:.55;cursor:wait}.exemplar-polarity button span{font-size:10px;font-weight:400}.exemplar-role-help{margin:0;padding:0 18px 12px;font-size:10px;color:#7c89a2;line-height:1.8}.exemplar-inspector{--reference-accent:#315bc4}.exemplar-inspector[data-polarity="negative"]{--reference-accent:#b94b43}.exemplar-inspector[data-polarity="negative"] .exemplar-slot[aria-pressed="true"]{border-color:#b94b43;background:#fff2ef;color:#b94b43}.exemplar-inspector[data-polarity="negative"] .range-slider input{accent-color:#b94b43}.exemplar-inspector[data-polarity="negative"] .range-slider button{color:#a54e46;background:#fbeeea}.editor-legend{flex-wrap:wrap;gap:5px 10px}.editor-legend>span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}.editor-legend i{display:inline-block;flex-shrink:0;margin:0}.negative-key{width:9px;height:9px;border:1.5px dashed #b94b43;background:#b94b4312}.editor-legend .prediction-key{margin-left:0}@media(max-width:680px){.exemplar-polarity{padding:0 12px 9px;gap:6px}.exemplar-polarity button{padding:9px 8px;font-size:10px}.exemplar-polarity button span{font-size:9px}.exemplar-role-help{padding:0 13px 10px;font-size:9px}}
+.canvas-wrap[data-selecting="true"][data-polarity="negative"] #canvas{outline-color:#b94b4333}
 </style>
 </head>
 <body>
@@ -72,27 +74,29 @@ footer{display:flex;justify-content:space-between;gap:12px;border-top:1px solid 
 </div>
 <div id="exemplar-editor" class="exemplar-editor" hidden>
  <div class="editor-guide"><span><b>1</b> 点一个目标</span><i>→</i><span><b>2</b> 拖角调范围</span><i>→</i><span><b>3</b> 按示例重数</span><button id="exemplar-done" type="button" class="editor-quiet">收起调整</button></div>
+ <div class="exemplar-polarity" role="group" aria-label="选择示例类型"><button id="exemplar-positive" type="button" aria-pressed="true">＋ 要数的（正例）<span id="exemplar-positive-count">0 / 3</span></button><button id="exemplar-negative" type="button" aria-pressed="false">− 不要数的（反例）<span id="exemplar-negative-count">0 / 3</span></button></div>
+ <p id="exemplar-role-help" class="exemplar-role-help">先点一个要数的完整目标。反例可选，用于提示模型区分相似干扰，结果仍需核对。</p>
 </div>
 <div class="editing-workspace" id="editing-workspace" data-editing="false">
 <div class="image-area" id="image-area">
 <div id="empty" class="empty"><div class="empty-illustration"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="9" y="9" width="46" height="46" rx="7"/><circle cx="24" cy="24" r="5"/><path d="m10 47 15-15 12 12 7-8 10 10"/></svg></div><strong>把要数的，放进画面里。</strong><p>上传图片后，原图与识别标记将在这里显示。<br>支持端面、尖头、棉头、米粒、绿豆与平铺杆等场景。</p></div>
-<div id="canvas-wrap" class="canvas-wrap" hidden><canvas id="canvas" hidden tabindex="0" aria-label="计数图片：点选目标，拖动蓝框移动位置，拖动四角调整范围"></canvas><span class="original-indicator" id="original-indicator" hidden>正在查看原图</span></div>
+<div id="canvas-wrap" class="canvas-wrap" hidden><canvas id="canvas" hidden tabindex="0" aria-label="计数图片：蓝色 E 框为要数的正例，红色 N 框为不要数的反例；拖框移动，拖角调整范围"></canvas><span class="original-indicator" id="original-indicator" hidden>正在查看原图</span></div>
 <div class="lens" id="lens" hidden aria-hidden="true"><canvas id="lens-canvas" width="360" height="360"></canvas></div>
 <div id="view-tools" class="view-tools" hidden aria-label="图片视图工具"><button id="pan-mode" type="button" aria-pressed="false" title="放大后开启，拖动画面">移动画面</button><span class="tool-divider"></span><button id="zoom-out" type="button" aria-label="缩小图片">−</button><output id="zoom-label" aria-live="polite">100%</output><button id="zoom-in" type="button" aria-label="放大图片">＋</button><button id="zoom-reset" type="button" title="完整显示图片">适应</button></div>
 </div>
 <aside id="exemplar-inspector" class="exemplar-inspector" hidden aria-label="示例范围调整">
- <div class="inspector-heading"><strong>目标示例</strong><span id="exemplar-selection">还没有选点</span></div>
+ <div class="inspector-heading"><strong id="exemplar-group-title">要数的 · 正例</strong><span id="exemplar-selection">还没有选点</span></div>
  <div class="exemplar-slots" role="group" aria-label="选择要调整的示例">
-  <button id="exemplar-card-0" type="button" class="exemplar-slot" aria-label="选择示例 1" aria-pressed="false"><canvas id="exemplar-thumb-0" width="96" height="96" hidden></canvas><span id="exemplar-slot-label-0">＋</span><small>示例 1</small></button>
-  <button id="exemplar-card-1" type="button" class="exemplar-slot" aria-label="选择示例 2" aria-pressed="false"><canvas id="exemplar-thumb-1" width="96" height="96" hidden></canvas><span id="exemplar-slot-label-1">＋</span><small>示例 2</small></button>
-  <button id="exemplar-card-2" type="button" class="exemplar-slot" aria-label="选择示例 3" aria-pressed="false"><canvas id="exemplar-thumb-2" width="96" height="96" hidden></canvas><span id="exemplar-slot-label-2">＋</span><small>示例 3</small></button>
+  <button id="exemplar-card-0" type="button" class="exemplar-slot" aria-label="选择正例 E1" aria-pressed="false"><canvas id="exemplar-thumb-0" width="96" height="96" hidden></canvas><span id="exemplar-slot-label-0">＋</span><small id="exemplar-card-label-0">正例 E1</small></button>
+  <button id="exemplar-card-1" type="button" class="exemplar-slot" aria-label="选择正例 E2" aria-pressed="false"><canvas id="exemplar-thumb-1" width="96" height="96" hidden></canvas><span id="exemplar-slot-label-1">＋</span><small id="exemplar-card-label-1">正例 E2</small></button>
+  <button id="exemplar-card-2" type="button" class="exemplar-slot" aria-label="选择正例 E3" aria-pressed="false"><canvas id="exemplar-thumb-2" width="96" height="96" hidden></canvas><span id="exemplar-slot-label-2">＋</span><small id="exemplar-card-label-2">正例 E3</small></button>
  </div>
  <div class="exemplar-closeup"><canvas id="exemplar-preview" width="320" height="320" hidden aria-label="选中示例的局部放大，蓝框为提交给模型的范围"></canvas><div id="exemplar-empty"><span aria-hidden="true">⌖</span>在图片上点一个目标<br><small>这里会放大显示选中的范围</small></div><span class="closeup-label" id="exemplar-closeup-label" hidden>局部放大 · 蓝框内是参考</span></div>
- <div class="range-controls"><div class="range-heading"><label for="exemplar-size">范围大小</label><output id="exemplar-size-value" for="exemplar-size">先点选目标</output></div><div class="range-slider"><button id="exemplar-smaller" type="button" aria-label="缩小当前示例范围" disabled>−</button><input id="exemplar-size" type="range" min="8" max="400" value="40" step="1" disabled><button id="exemplar-larger" type="button" aria-label="放大当前示例范围" disabled>＋</button></div><p>让蓝框刚好包住一个完整目标。<br>每个示例可单独调整，尽量避开邻居。</p></div>
- <div class="editor-secondary-actions"><button id="exemplar-undo" type="button" disabled title="Ctrl + Z">撤销</button><button id="exemplar-delete" type="button" disabled title="Delete">删除当前</button><button id="exemplar-clear" type="button" disabled>清空</button></div>
+ <div class="range-controls"><div class="range-heading"><label for="exemplar-size">范围大小</label><output id="exemplar-size-value" for="exemplar-size">先点选目标</output></div><div class="range-slider"><button id="exemplar-smaller" type="button" aria-label="缩小当前示例范围" disabled>−</button><input id="exemplar-size" type="range" min="8" max="400" value="40" step="1" disabled><button id="exemplar-larger" type="button" aria-label="放大当前示例范围" disabled>＋</button></div><p id="exemplar-range-help">让参考框刚好包住一个完整目标，每个示例可单独调整，尽量避开邻居。</p></div>
+ <div class="editor-secondary-actions"><button id="exemplar-undo" type="button" disabled title="Ctrl + Z · 撤销最近一次任意组的调整">撤销</button><button id="exemplar-delete" type="button" disabled title="Delete">删除当前</button><button id="exemplar-clear" type="button" disabled>清空本组</button></div>
 </aside>
 </div>
-<div class="editor-bottom" id="exemplar-bottom" hidden><div><p id="exemplar-state" role="status" aria-live="polite">上传图片后可启用点选。</p><p id="exemplar-dirty" class="exemplar-dirty" hidden>示例已调整，重数后更新结果</p><p class="editor-legend"><span class="exemplar-key" aria-hidden="true"></span>蓝框：你选的示例 <span class="prediction-key" aria-hidden="true"></span>绿点：模型预测</p></div><div class="editor-bottom-actions"><button id="exemplar-edit" type="button" hidden>调整示例</button><button id="run-exemplars" type="button" disabled>按示例重新计数</button></div></div>
+<div class="editor-bottom" id="exemplar-bottom" hidden><div><p id="exemplar-state" role="status" aria-live="polite">上传图片后可启用点选。</p><p id="exemplar-dirty" class="exemplar-dirty" hidden>示例已调整，重数后更新结果</p><p class="editor-legend"><span><i class="exemplar-key" aria-hidden="true"></i>蓝框 E：要数的</span><span><i class="negative-key" aria-hidden="true"></i>红框 N：不要数的</span><span><i class="prediction-key" aria-hidden="true"></i>绿点：模型预测</span></p></div><div class="editor-bottom-actions"><button id="exemplar-edit" type="button" hidden>调整示例</button><button id="run-exemplars" type="button" disabled>按示例重新计数</button></div></div>
 <div class="preview-foot"><p class="caption" id="caption">正对目标拍摄，保持清晰，尽量减少遮挡。</p><span class="preview-hint" id="preview-hint"><i aria-hidden="true"></i>识别后显示逐个标记</span></div>
 </section>
 <div class="tips"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M10 9v5m0-9v1"/></svg><p><strong>拍摄小提示</strong>　完整拍入目标，选择对比清楚的背景。堆叠照片仅能统计可见目标，遮挡部分无法从图片中得出。</p></div>
@@ -104,22 +108,27 @@ footer{display:flex;justify-content:space-between;gap:12px;border-top:1px solid 
 const $=id=>document.getElementById(id);
 const canvas=$('canvas'),ctx=canvas.getContext('2d'),lensCanvas=$('lens-canvas'),lensCtx=lensCanvas.getContext('2d');
 let dataURL='',currentImage=null,points=[],busy=false,revision=0,originalHeld=false,timer=null,startedAt=0,lensFrame=0,lastPointer=null;
-let exemplarPoints=[],exemplarDiameter=40,exemplarGesture=null,activeManual=false;
+let exemplarPoints=[],negativeExemplarPoints=[],exemplarPolarity='positive',exemplarSelections={positive:-1,negative:-1},exemplarDiameter=40,exemplarGesture=null,activeManual=false;
 let editorCollapsed=false,selectedExemplar=-1,exemplarHistory=[],rangeSnapshot=null,lastResultExemplarKey=null;
 let viewZoom=1,viewPan={x:0,y:0},panMode=false;
 const categoryLabels={user_examples:'点选目标示例',bamboo:'竹签 / 木签端面',bamboo_flat:'竹签平端面',flat_end:'竹签平端面',bamboo_sharp:'竹签尖头',sharp:'竹签尖头',insects:'昆虫',cotton:'棉签头部',rice:'米粒',mung:'绿豆',beans:'豆类',coins:'硬币',coin:'硬币',particles:'独立目标',chopsticks:'平铺筷子',rods:'平铺木杆',laid_rods:'平铺筷子 / 木杆',unknown:'未能确定类别',automatic:'未能确定类别',ambiguous:'未能确定类别',other:'其他场景'};
 function setBusy(value,reading=false){busy=value;if(!value)activeManual=false;$('file').disabled=value;$('upload-area').classList.toggle('disabled',value);$('run').disabled=value||!dataURL;$('spinner').hidden=!value;$('run-arrow').hidden=value;$('run-label').textContent=value?(reading?'读取图片中…':'正在识别…'):'开始识别';updateExemplarControls()}
 function exemplarEnabled(){return $('exemplar-enabled').checked===true}
 function exemplarEditing(){return exemplarEnabled()&&!editorCollapsed}
-function selectedReference(){return exemplarPoints[selectedExemplar]||null}
-function exemplarKey(){return JSON.stringify(exemplarPoints.map(({x,y,diameter})=>({x,y,diameter})))}
-function referenceSnapshot(){return {points:exemplarPoints.map(point=>({...point})),selected:selectedExemplar,diameter:exemplarDiameter}}
-function restoreReference(snapshot){exemplarPoints=snapshot.points.map(point=>({...point}));selectedExemplar=snapshot.selected;exemplarDiameter=snapshot.diameter}
+function referenceGroup(polarity=exemplarPolarity){return polarity==='negative'?negativeExemplarPoints:exemplarPoints}
+function selectedReference(){return referenceGroup()[selectedExemplar]||null}
+function referenceData(positive=exemplarPoints,negative=negativeExemplarPoints){return {positive:positive.map(({x,y,diameter})=>({x,y,diameter})),negative:negative.map(({x,y,diameter})=>({x,y,diameter}))}}
+function exemplarKey(){return JSON.stringify(referenceData())}
+function referenceSnapshot(){return {points:exemplarPoints.map(point=>({...point})),negative:negativeExemplarPoints.map(point=>({...point})),polarity:exemplarPolarity,selections:{...exemplarSelections,[exemplarPolarity]:selectedExemplar},selected:selectedExemplar,diameter:exemplarDiameter}}
+function restoreReference(snapshot){exemplarPoints=snapshot.points.map(point=>({...point}));negativeExemplarPoints=snapshot.negative.map(point=>({...point}));exemplarPolarity=snapshot.polarity;exemplarSelections={...snapshot.selections};selectedExemplar=snapshot.selected;exemplarDiameter=snapshot.diameter}
 function rememberReference(snapshot=referenceSnapshot()){exemplarHistory.push(snapshot);if(exemplarHistory.length>80)exemplarHistory.shift()}
-function commitRange(){if(!rangeSnapshot)return;if(JSON.stringify(rangeSnapshot.points)!==JSON.stringify(exemplarPoints))rememberReference(rangeSnapshot);rangeSnapshot=null}
-function selectReference(index){commitRange();selectedExemplar=exemplarPoints[index]?index:-1;if(selectedReference())exemplarDiameter=selectedReference().diameter;updateExemplarControls();draw()}
+function snapshotChanged(snapshot){return JSON.stringify(referenceData(snapshot.points,snapshot.negative))!==exemplarKey()}
+function commitRange(){if(!rangeSnapshot)return;if(snapshotChanged(rangeSnapshot))rememberReference(rangeSnapshot);rangeSnapshot=null}
+function selectReference(index,polarity=exemplarPolarity){commitRange();exemplarSelections[exemplarPolarity]=selectedExemplar;exemplarPolarity=polarity;selectedExemplar=referenceGroup()[index]?index:-1;exemplarSelections[polarity]=selectedExemplar;if(selectedReference())exemplarDiameter=selectedReference().diameter;updateExemplarControls();draw()}
+function switchReferenceGroup(polarity){if(busy||!exemplarEditing())return;cancelGesture();commitRange();const index=exemplarSelections[polarity];selectReference(referenceGroup(polarity)[index]?index:referenceGroup(polarity).length?0:-1,polarity)}
+$('exemplar-positive').onclick=()=>switchReferenceGroup('positive');$('exemplar-negative').onclick=()=>switchReferenceGroup('negative');
 function updateExemplarControls(){
- const enabled=exemplarEnabled(),editable=!!currentImage&&!busy&&exemplarEditing(),point=selectedReference();
+ const enabled=exemplarEnabled(),editable=!!currentImage&&!busy&&exemplarEditing(),point=selectedReference(),group=referenceGroup(),negative=exemplarPolarity==='negative',prefix=negative?'N':'E',role=negative?'反例':'正例';
  $('exemplar-enabled').disabled=busy||!currentImage;
  for(const id of ['exemplar-editor','exemplar-inspector'])$(id).hidden=!enabled||editorCollapsed;
  $('exemplar-bottom').hidden=!enabled;$('exemplar-edit').hidden=!enabled||!editorCollapsed;$('exemplar-edit').disabled=busy;
@@ -127,33 +136,41 @@ function updateExemplarControls(){
  $('exemplar-size').disabled=!editable||!point;
  for(const id of ['exemplar-smaller','exemplar-larger','exemplar-delete'])$(id).disabled=!editable||!point;
  $('exemplar-undo').disabled=!editable||(!exemplarHistory.length&&!rangeSnapshot);
- $('exemplar-clear').disabled=!editable||!exemplarPoints.length;
+ $('exemplar-clear').disabled=!editable||!group.length;
  $('exemplar-done').disabled=!editable;
  $('run-exemplars').disabled=busy||!currentImage||!enabled||!exemplarPoints.length;
- $('run-exemplars').textContent=busy&&activeManual?'正在重新计数…':exemplarPoints.length?`按 ${exemplarPoints.length} 个示例重新计数`:'按示例重新计数';
+ $('run-exemplars').textContent=busy&&activeManual?'正在重新计数…':negativeExemplarPoints.length?'按正反例重新计数':exemplarPoints.length?`按 ${exemplarPoints.length} 个示例重新计数`:'按示例重新计数';
+ for(const polarity of ['positive','negative']){$(`exemplar-${polarity}`).disabled=!editable;$(`exemplar-${polarity}`).setAttribute('aria-pressed',String(polarity===exemplarPolarity));$(`exemplar-${polarity}-count`).textContent=`${referenceGroup(polarity).length} / 3`}
+ $('exemplar-inspector').dataset.polarity=exemplarPolarity;$('canvas-wrap').dataset.polarity=exemplarPolarity;
+ $('exemplar-group-title').textContent=negative?'不要数的 · 反例':'要数的 · 正例';
+ $('exemplar-range-help').textContent=`让${negative?'红':'蓝'}框刚好包住一个完整${negative?'干扰对象':'目标'}，每个示例可单独调整，尽量避开邻居。`;
+ $('exemplar-role-help').textContent=negative?'点选不想计入的相似干扰作为反例，尽量框住单个对象。反例会一起交给模型参考，仍可能漏计或误计。':'先点一个要数的完整目标。反例可选，用于提示模型区分相似干扰，结果仍需核对。';
  $('exemplar-size').value=String(point?.diameter??exemplarDiameter);
  $('exemplar-size-value').textContent=point?`${point.diameter} px`:'先点一个目标';
- $('exemplar-selection').textContent=point?`正在调整 E${selectedExemplar+1}`:'还没有选点';
+ $('exemplar-selection').textContent=point?`正在调整 ${prefix}${selectedExemplar+1}`:`本组还没有${role}`;
  $('canvas-wrap').dataset.selecting=String(editable&&!panMode);
  $('canvas-wrap').dataset.panning=String(panMode&&!busy);
  $('canvas-wrap').dataset.dragging=String(!!exemplarGesture&&['move','pan'].includes(exemplarGesture.kind));
  $('canvas-wrap').dataset.resizing=String(exemplarGesture?.kind==='resize');
- if(enabled&&currentImage)$('preview-hint').textContent=busy?'识别中 · 示例已锁定':editorCollapsed?'按住看原图 · 鼠标悬停放大':panMode?'拖动画面 · 再点“移动画面”返回选点':'拖蓝框移动 · 拖四角调大小';
- const state=!currentImage?'上传图片后可启用点选。':busy?(activeManual?'正在按示例重新识别整图，选点已锁定。':'正在处理图片，选点已锁定。'):!enabled?'自动识别无需选点。':!exemplarPoints.length?'点一个清晰目标的中心，蓝框会出现在这里。':`已选 ${exemplarPoints.length} / 3 个示例 · ${editorCollapsed?'示例已保留，可以重数或重新调整。':panMode?'拖动画面查看其他位置':'拖四角框住完整目标，再点下方按钮重数。'}`;
+ if(enabled&&currentImage)$('preview-hint').textContent=busy?'识别中 · 示例已锁定':editorCollapsed?'按住看原图 · 鼠标悬停放大':panMode?'拖动画面 · 再点“移动画面”返回选点':`当前选${role} · 拖框移动，拖角调大小`;
+ const counts=`正例 ${exemplarPoints.length} / 3 · 反例 ${negativeExemplarPoints.length} / 3`;
+ const state=!currentImage?'上传图片后可启用点选。':busy?(activeManual?'正在按示例重新识别整图，正反例已锁定。':'正在处理图片，正反例已锁定。'):!enabled?'自动识别无需选点。':!exemplarPoints.length?`${counts} · 请先至少点一个“要数的”正例，才能重新计数。`:`${counts} · ${editorCollapsed?'两组示例已保留，可以重数或重新调整。':panMode?'拖动画面查看其他位置':negative?'当前点选不要数的反例；两组示例一起提交给模型。':'拖四角框住完整目标，再点下方按钮重数。'}`;
  if($('exemplar-state').textContent!==state)$('exemplar-state').textContent=state;
  $('exemplar-dirty').hidden=!enabled||!['candidate','success'].includes($('result-card').dataset.state)||lastResultExemplarKey===exemplarKey();
  for(let i=0;i<3;i++){
-  const item=exemplarPoints[i],card=$(`exemplar-card-${i}`),thumb=$(`exemplar-thumb-${i}`);
+  const item=group[i],card=$(`exemplar-card-${i}`),thumb=$(`exemplar-thumb-${i}`);
   card.disabled=!editable||!item;card.setAttribute('aria-pressed',String(!!item&&i===selectedExemplar));
+  card.setAttribute('aria-label',`选择${role} ${prefix}${i+1}`);$(`exemplar-card-label-${i}`).textContent=`${role} ${prefix}${i+1}`;
   thumb.hidden=!item;$(`exemplar-slot-label-${i}`).hidden=!!item;
   if(item)drawReferenceCrop(thumb,item,false);
  }
  $('exemplar-empty').hidden=!!point;$('exemplar-preview').hidden=!point;$('exemplar-closeup-label').hidden=!point;
+ $('exemplar-preview').setAttribute('aria-label',`选中${role}的局部放大，${negative?'红':'蓝'}框内为模型参考范围`);$('exemplar-closeup-label').textContent=`局部放大 · ${negative?'红框为反例':'蓝框为正例'}`;
  if(point)drawReferenceCrop($('exemplar-preview'),point,true);
  clampPan();applyView();
 }
 function resetExemplars(){
- exemplarPoints=[];exemplarGesture=null;editorCollapsed=false;selectedExemplar=-1;exemplarHistory=[];rangeSnapshot=null;lastResultExemplarKey=null;
+ exemplarPoints=[];negativeExemplarPoints=[];exemplarPolarity='positive';exemplarSelections={positive:-1,negative:-1};exemplarGesture=null;editorCollapsed=false;selectedExemplar=-1;exemplarHistory=[];rangeSnapshot=null;lastResultExemplarKey=null;
  $('exemplar-enabled').checked=false;viewZoom=1;viewPan={x:0,y:0};panMode=false;
  exemplarDiameter=currentImage?Math.max(8,Math.min(400,Math.round(Math.min(currentImage.naturalWidth,currentImage.naturalHeight)/20))):40;
  applyView();updateExemplarControls();
@@ -173,8 +190,8 @@ $('exemplar-size').onchange=()=>{if(!busy){commitRange();updateExemplarControls(
 function nudgeRange(direction){if(busy||!exemplarEditing()||!selectedReference())return;commitRange();const before=referenceSnapshot(),point=selectedReference();point.diameter=Math.max(8,Math.min(400,point.diameter+direction*Math.max(1,Math.round(point.diameter*.1))));exemplarDiameter=point.diameter;if(before.diameter!==exemplarDiameter)rememberReference(before);updateExemplarControls();draw()}
 $('exemplar-smaller').onclick=()=>nudgeRange(-1);$('exemplar-larger').onclick=()=>nudgeRange(1);
 $('exemplar-undo').onclick=()=>{if(busy||!exemplarEditing())return;cancelGesture();if(rangeSnapshot){restoreReference(rangeSnapshot);rangeSnapshot=null}else if(exemplarHistory.length)restoreReference(exemplarHistory.pop());updateExemplarControls();draw()};
-$('exemplar-delete').onclick=()=>{if(busy||!exemplarEditing()||!selectedReference())return;commitRange();rememberReference();exemplarPoints.splice(selectedExemplar,1);selectedExemplar=Math.min(selectedExemplar,exemplarPoints.length-1);if(selectedReference())exemplarDiameter=selectedReference().diameter;updateExemplarControls();draw()};
-$('exemplar-clear').onclick=()=>{if(busy||!exemplarEditing()||!exemplarPoints.length)return;commitRange();rememberReference();exemplarPoints=[];selectedExemplar=-1;updateExemplarControls();draw()};
+$('exemplar-delete').onclick=()=>{if(busy||!exemplarEditing()||!selectedReference())return;cancelGesture();commitRange();rememberReference();const group=referenceGroup();group.splice(selectedExemplar,1);selectedExemplar=Math.min(selectedExemplar,group.length-1);exemplarSelections[exemplarPolarity]=selectedExemplar;if(selectedReference())exemplarDiameter=selectedReference().diameter;updateExemplarControls();draw()};
+$('exemplar-clear').onclick=()=>{if(busy||!exemplarEditing()||!referenceGroup().length)return;cancelGesture();commitRange();rememberReference();referenceGroup().splice(0);selectedExemplar=-1;exemplarSelections[exemplarPolarity]=-1;updateExemplarControls();draw()};
 for(let i=0;i<3;i++)$(`exemplar-card-${i}`).onclick=()=>{if(!busy&&exemplarEditing())selectReference(i)};
 function drawReferenceCrop(target,point,withFrame){
  if(!currentImage)return;const context=target.getContext('2d'),w=currentImage.naturalWidth,h=currentImage.naturalHeight;
@@ -183,7 +200,7 @@ function drawReferenceCrop(target,point,withFrame){
  const left=Math.max(0,sx),top=Math.max(0,sy),right=Math.min(w,sx+size),bottom=Math.min(h,sy+size);
  if(right>left&&bottom>top)context.drawImage(currentImage,left,top,right-left,bottom-top,(left-sx)*scale,(top-sy)*scale,(right-left)*scale,(bottom-top)*scale);
  if(!withFrame)return;
- const box=referenceBox(point);context.lineWidth=3;context.strokeStyle='#315bc4';context.strokeRect((box.left-sx)*scale,(box.top-sy)*scale,(box.right-box.left)*scale,(box.bottom-box.top)*scale);
+ const box=referenceBox(point);context.lineWidth=3;context.strokeStyle=exemplarPolarity==='negative'?'#b94b43':'#315bc4';context.strokeRect((box.left-sx)*scale,(box.top-sy)*scale,(box.right-box.left)*scale,(box.bottom-box.top)*scale);
  const cx=(point.x-sx)*scale,cy=(point.y-sy)*scale;context.beginPath();context.moveTo(cx-6,cy);context.lineTo(cx+6,cy);context.moveTo(cx,cy-6);context.lineTo(cx,cy+6);context.stroke();
 }
 function referenceBox(point){return {left:Math.max(0,point.x-point.diameter/2),top:Math.max(0,point.y-point.diameter/2),right:Math.min(currentImage.naturalWidth,point.x+point.diameter/2),bottom:Math.min(currentImage.naturalHeight,point.y+point.diameter/2)}}
@@ -216,29 +233,30 @@ function drawExemplars(){
  if(!exemplarEnabled()||!currentImage)return;
  const sx=canvas.width/currentImage.naturalWidth,sy=canvas.height/currentImage.naturalHeight,unit=canvas.width/(canvas.getBoundingClientRect().width||canvas.width);
  ctx.font=`600 ${12*unit}px system-ui,sans-serif`;ctx.textBaseline='top';
- exemplarPoints.forEach((point,index)=>{
-  const box=referenceBox(point),left=box.left*sx,top=box.top*sy,right=box.right*sx,bottom=box.bottom*sy,x=point.x*sx,y=point.y*sy,selected=index===selectedExemplar&&exemplarEditing();
-  ctx.strokeStyle=selected?'#315bc4':'#6989db';ctx.lineWidth=(selected?2.3:1.4)*unit;
-  ctx.fillStyle=selected?'#315bc412':'#315bc406';ctx.fillRect(left,top,right-left,bottom-top);ctx.strokeRect(left,top,right-left,bottom-top);
+ for(const polarity of ['positive','negative'])referenceGroup(polarity).forEach((point,index)=>{
+  const box=referenceBox(point),left=box.left*sx,top=box.top*sy,right=box.right*sx,bottom=box.bottom*sy,x=point.x*sx,y=point.y*sy,selected=polarity===exemplarPolarity&&index===selectedExemplar&&exemplarEditing(),negative=polarity==='negative',color=negative?'#b94b43':'#315bc4';
+  ctx.strokeStyle=color;ctx.lineWidth=(selected?2.3:1.4)*unit;ctx.setLineDash(negative?[5*unit,3*unit]:[]);
+  ctx.fillStyle=negative?(selected?'#b94b4312':'#b94b4306'):(selected?'#315bc412':'#315bc406');ctx.fillRect(left,top,right-left,bottom-top);ctx.strokeRect(left,top,right-left,bottom-top);ctx.setLineDash([]);
   ctx.beginPath();ctx.moveTo(x-5*unit,y);ctx.lineTo(x+5*unit,y);ctx.moveTo(x,y-5*unit);ctx.lineTo(x,y+5*unit);ctx.stroke();
   if(selected){const handle=8*unit;for(const [hx,hy]of [[left,top],[right,top],[left,bottom],[right,bottom]]){ctx.fillStyle='#fff';ctx.fillRect(hx-handle/2,hy-handle/2,handle,handle);ctx.strokeRect(hx-handle/2,hy-handle/2,handle,handle)}}
-  const label=`E${index+1}`,width=ctx.measureText(label).width,tx=Math.max(unit,Math.min(left,canvas.width-width-7*unit)),ty=Math.max(unit,Math.min(top-21*unit,canvas.height-21*unit));
-  ctx.fillStyle=selected?'#315bc4':'#6989db';ctx.fillRect(tx-unit,ty-unit,width+7*unit,19*unit);ctx.fillStyle='#fff';ctx.fillText(label,tx+2*unit,ty+2*unit);
+  const label=`${negative?'N':'E'}${index+1}`,width=ctx.measureText(label).width,tx=Math.max(unit,Math.min(left,canvas.width-width-7*unit)),ty=Math.max(unit,Math.min(top-21*unit,canvas.height-21*unit));
+  ctx.fillStyle=color;ctx.fillRect(tx-unit,ty-unit,width+7*unit,19*unit);ctx.fillStyle='#fff';ctx.fillText(label,tx+2*unit,ty+2*unit);
  });
 }
 function draw(){if(!currentImage){canvas.hidden=true;$('canvas-wrap').hidden=true;$('empty').hidden=false;return}const scale=Math.min(1,2000/Math.max(currentImage.naturalWidth,currentImage.naturalHeight));canvas.width=Math.max(1,Math.round(currentImage.naturalWidth*scale));canvas.height=Math.max(1,Math.round(currentImage.naturalHeight*scale));canvas.hidden=false;$('canvas-wrap').hidden=false;$('empty').hidden=true;ctx.drawImage(currentImage,0,0,canvas.width,canvas.height);if(!originalHeld&&points.length)drawMarkers(ctx,x=>x*canvas.width/currentImage.naturalWidth,y=>y*canvas.height/currentImage.naturalHeight,Math.max(12,Math.min(23,Math.max(canvas.width,canvas.height)/80)),points.length<=120);drawExemplars()}
 function renderLens(){lensFrame=0;if(!lastPointer||!currentImage||originalHeld||busy||!points.length)return;const rect=canvas.getBoundingClientRect();if(!rect.width||!rect.height)return;const px=(lastPointer.clientX-rect.left)/rect.width,py=(lastPointer.clientY-rect.top)/rect.height;if(px<0||px>1||py<0||py>1){hideLens();return}const lens=$('lens');lens.hidden=false;const area=$('image-area').getBoundingClientRect(),diameter=lens.offsetWidth||180,sourceWidth=Math.min(currentImage.naturalWidth,currentImage.naturalHeight,currentImage.naturalWidth/rect.width*diameter/2.6),sourceHeight=sourceWidth;const sx=Math.max(0,Math.min(currentImage.naturalWidth-sourceWidth,px*currentImage.naturalWidth-sourceWidth/2)),sy=Math.max(0,Math.min(currentImage.naturalHeight-sourceHeight,py*currentImage.naturalHeight-sourceHeight/2));lensCtx.clearRect(0,0,360,360);lensCtx.drawImage(currentImage,sx,sy,sourceWidth,sourceHeight,0,0,360,360);drawMarkers(lensCtx,x=>(x-sx)*360/sourceWidth,y=>(y-sy)*360/sourceHeight,25,true);let left=lastPointer.clientX-area.left+19,top=lastPointer.clientY-area.top-diameter-16;if(left+diameter>area.width-8)left=lastPointer.clientX-area.left-diameter-19;if(top<8)top=lastPointer.clientY-area.top+19;lens.style.left=`${Math.max(8,Math.min(left,area.width-diameter-8))}px`;lens.style.top=`${Math.max(8,Math.min(top,area.height-diameter-8))}px`;lens.hidden=false}
 function hitReference(event){
  const rect=canvas.getBoundingClientRect(),sx=rect.width/currentImage.naturalWidth,sy=rect.height/currentImage.naturalHeight,x=event.clientX-rect.left,y=event.clientY-rect.top;
- const order=[selectedExemplar,...exemplarPoints.map((_,i)=>i).reverse().filter(i=>i!==selectedExemplar)];
- for(const index of order){const point=exemplarPoints[index];if(!point)continue;const b=referenceBox(point),left=b.left*sx,top=b.top*sy,right=b.right*sx,bottom=b.bottom*sy;
+ const all=['positive','negative'].flatMap(polarity=>referenceGroup(polarity).map((point,index)=>({point,index,polarity}))),selected=all.find(item=>item.polarity===exemplarPolarity&&item.index===selectedExemplar),order=[selected,...all.reverse().filter(item=>item!==selected)];
+ for(const item of order){if(!item)continue;const {point,index,polarity}=item,b=referenceBox(point),left=b.left*sx,top=b.top*sy,right=b.right*sx,bottom=b.bottom*sy;
   // Corners must not consume the centre of a small box: centre always moves it.
   const cx=point.x*sx,cy=point.y*sy,centre=Math.hypot(x-cx,y-cy)<=Math.min(10,Math.min(right-left,bottom-top)*.25);
-  if(!centre&&index===selectedExemplar){for(const [hx,hy]of [[left,top],[right,top],[left,bottom],[right,bottom]])if(Math.hypot(x-hx,y-hy)<=Math.min(12,Math.max(5,Math.min(right-left,bottom-top)*.35)))return {index,kind:'resize',corner:{x:hx===left?-1:1,y:hy===top?-1:1}}}
-  if(x>=left&&x<=right&&y>=top&&y<=bottom)return {index,kind:'move'};
+  if(!centre&&polarity===exemplarPolarity&&index===selectedExemplar){for(const [hx,hy]of [[left,top],[right,top],[left,bottom],[right,bottom]])if(Math.hypot(x-hx,y-hy)<=Math.min(12,Math.max(5,Math.min(right-left,bottom-top)*.35)))return {index,polarity,kind:'resize',corner:{x:hx===left?-1:1,y:hy===top?-1:1}}}
+  if(x>=left&&x<=right&&y>=top&&y<=bottom)return {index,polarity,kind:'move'};
  }
  return null;
 }
+function referenceConflict(point,polarity=null,index=-1){return ['positive','negative'].some(role=>referenceGroup(role).some((other,i)=>!(role===polarity&&i===index)&&Math.hypot(point.x-other.x,point.y-other.y)<2))}
 function cancelGesture(){
  const gesture=exemplarGesture;exemplarGesture=null;
  if(gesture?.before)restoreReference(gesture.before);
@@ -252,7 +270,7 @@ function moveGesture(event){
  if(Math.hypot(dx,dy)>4)gesture.moved=true;
  if(gesture.kind==='add')return;
  if(gesture.kind==='pan'){viewPan={x:gesture.pan.x+dx,y:gesture.pan.y+dy};clampPan();applyView();return}
- const point=exemplarPoints[gesture.index],original=gesture.before.points[gesture.index];if(!point||!gesture.moved)return;
+ const point=referenceGroup(gesture.polarity)[gesture.index],original=(gesture.polarity==='negative'?gesture.before.negative:gesture.before.points)[gesture.index];if(!point||!gesture.moved)return;
  if(gesture.kind==='move'){
   point.x=Math.max(0,Math.min(currentImage.naturalWidth-.001,original.x+dx/gesture.rect.width*currentImage.naturalWidth));
   point.y=Math.max(0,Math.min(currentImage.naturalHeight-.001,original.y+dy/gesture.rect.height*currentImage.naturalHeight));
@@ -273,12 +291,14 @@ function finishGesture(event){
  if(gesture.kind==='add'){
   if(Math.hypot(event.clientX-gesture.clientX,event.clientY-gesture.clientY)>8){updateExemplarControls();return}
   const point=nativePoint(event);if(!point)return;
-  if(exemplarPoints.length>=3){$('exemplar-state').textContent='最多选择 3 个示例；点击已有蓝框即可继续调整。';return}
-  if(exemplarPoints.some(other=>Math.hypot(point.x-other.x,point.y-other.y)<2)){updateExemplarControls();return}
-  event.preventDefault?.();rememberReference();exemplarPoints.push({...point,diameter:exemplarDiameter});selectedExemplar=exemplarPoints.length-1;
- }else if(gesture.before&&JSON.stringify(gesture.before.points)!==JSON.stringify(exemplarPoints)){
-  const point=exemplarPoints[gesture.index];
-  if(exemplarPoints.some((other,i)=>i!==gesture.index&&Math.hypot(point.x-other.x,point.y-other.y)<2)){restoreReference(gesture.before);$('exemplar-state').textContent='两个示例太近了，请选择不同目标。';draw();return}
+  const group=referenceGroup();
+  if(group.length>=3){$('exemplar-state').textContent=`本组最多选择 3 个${exemplarPolarity==='negative'?'反例':'正例'}；点击已有框可继续调整。`;return}
+  if(referenceConflict(point)){updateExemplarControls();$('exemplar-state').textContent='正反例请选不同目标，示例中心不能重合。';return}
+  event.preventDefault?.();rememberReference();group.push({...point,diameter:exemplarDiameter});selectedExemplar=group.length-1;exemplarSelections[exemplarPolarity]=selectedExemplar;
+ }else if(gesture.before&&snapshotChanged(gesture.before)){
+  const point=referenceGroup(gesture.polarity)[gesture.index];
+  if(!point){updateExemplarControls();draw();return}
+  if(referenceConflict(point,gesture.polarity,gesture.index)){restoreReference(gesture.before);updateExemplarControls();$('exemplar-state').textContent='正反例请选不同目标，示例中心不能重合。';draw();return}
   rememberReference(gesture.before);
  }
  updateExemplarControls();draw();
@@ -290,8 +310,8 @@ canvas.addEventListener('pointerdown',event=>{
  if(panMode&&viewZoom>1){exemplarGesture={kind:'pan',pointerId:event.pointerId,clientX:event.clientX,clientY:event.clientY,pan:{...viewPan}};canvas.setPointerCapture?.(event.pointerId);updateExemplarControls();return}
  if(exemplarEditing()){
   if(!currentImage||!nativePoint(event))return;commitRange();const hit=hitReference(event);
-  if(hit)selectReference(hit.index);
-  exemplarGesture={kind:hit?.kind||'add',index:hit?.index,corner:hit?.corner,pointerId:event.pointerId,clientX:event.clientX,clientY:event.clientY,rect:canvas.getBoundingClientRect(),before:hit?referenceSnapshot():null};
+  if(hit)selectReference(hit.index,hit.polarity);
+  exemplarGesture={kind:hit?.kind||'add',index:hit?.index,polarity:hit?.polarity||exemplarPolarity,corner:hit?.corner,pointerId:event.pointerId,clientX:event.clientX,clientY:event.clientY,rect:canvas.getBoundingClientRect(),before:hit?referenceSnapshot():null};
   canvas.setPointerCapture?.(event.pointerId);updateExemplarControls();return;
  }
  if(!points.length)return;originalHeld=true;$('original-indicator').hidden=false;draw();
@@ -320,7 +340,7 @@ $('file').onchange=event=>selectFile(event.target.files[0]);
 let dragDepth=0;const upload=$('upload-area');upload.addEventListener('dragenter',event=>{event.preventDefault();if(!busy){dragDepth++;upload.classList.add('dragging')}});upload.addEventListener('dragover',event=>event.preventDefault());upload.addEventListener('dragleave',event=>{event.preventDefault();dragDepth=Math.max(0,dragDepth-1);if(!dragDepth)upload.classList.remove('dragging')});upload.addEventListener('drop',event=>{event.preventDefault();dragDepth=0;upload.classList.remove('dragging');if(!busy)selectFile(event.dataTransfer.files[0])});
 window.addEventListener('dragover',event=>{if(event.dataTransfer&&Array.from(event.dataTransfer.types||[]).includes('Files'))event.preventDefault()});window.addEventListener('drop',event=>event.preventDefault());
 window.addEventListener('paste',event=>{if(busy)return;const items=Array.from(event.clipboardData?.items||[]),item=items.find(value=>value.kind==='file'&&value.type.startsWith('image/'));if(item){event.preventDefault();selectFile(item.getAsFile())}});
-async function runCount(useExemplars=false){if(busy||!dataURL||(useExemplars&&(!exemplarEnabled()||!exemplarPoints.length)))return;commitRange();cancelGesture();const payload=useExemplars?{image:dataURL,exemplar_points:exemplarPoints.map(point=>({x:point.x,y:point.y,diameter:point.diameter})),engine:'smart'}:{image:dataURL};const version=++revision;activeManual=useExemplars;clearResult();setBusy(true);setResultState('busy','正在识别');$('category').textContent='自动识别中';$('status').textContent='正在分析图片，请稍候。';$('image-badge').textContent='识别进行中';const started=performance.now(),requestTimer=startTimer(version),controller=new AbortController();let deadline=null,timedOut=false;try{const request=(async()=>{const response=await fetch('/api/count',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:controller.signal});let result;try{result=await response.json()}catch{throw Error(response.status===413?'图片过大，请缩小后重新上传。':'服务返回了无效结果，请重试。')}if(!response.ok)throw Error(result.error||'识别失败，请稍后重试。');return result})();const timeout=new Promise((resolve,reject)=>{deadline=setTimeout(()=>{timedOut=true;controller.abort();reject(Error('本次等待已超过 100 秒，已结束等待并保留原图。后台任务可能仍在处理，请稍候再试，避免重复提交。'))},100000)});const result=await Promise.race([request,timeout]);if(version!==revision)return;stopTimer();const meta=result.meta||{},valid=meta.prediction_valid!==false&&!['no_initial_exemplars','no_final_detections','no_candidates'].includes(meta.diagnosis)&&result.count!=null&&Number.isFinite(Number(result.count))&&Number.isInteger(Number(result.count))&&Number(result.count)>=0;const elapsed=Number(meta.total_elapsed_seconds??((performance.now()-started)/1000));$('elapsed').textContent=Number.isFinite(elapsed)?`耗时 ${elapsed.toFixed(2)} 秒`:'耗时 —';const candidateKinds={exemplar_candidates:'按示例检测候选',flat_end_candidates:'可见端面候选',insect_candidates:'可见昆虫候选',grain_candidates:'可见谷粒候选',sharp_candidates:'可见尖头候选',visible_candidates:'可见目标候选',rod_candidates:'整根长条候选',visible_rod_candidates:'可见筷子候选'},candidate=useExemplars||!!candidateKinds[meta.count_kind]||meta.framework==='CountGD++';$('count-label').textContent=candidateKinds[meta.count_kind]||(useExemplars?'按示例检测候选':candidate?'检测候选数':'识别数量');const deviceLabel=meta.device==='cuda'?'GPU · ':meta.device==='cpu'?'CPU · ':'';const hint=meta.scene_classification||{},category=meta.detected_category||meta.category||(hint.accepted?hint.scene:null);$('category').textContent=category?(categoryLabels[category]||category):'暂未确定目标';if(!valid){points=[];$('count').textContent='—';$('count-unit').hidden=true;const unavailable=meta.diagnosis==='gpu_resources_unavailable';setResultState('uncertain',unavailable?'资源暂不可用':'暂无法可靠计数');showWarning(meta.user_message||(unavailable?'当前 GPU 资源暂不可用，请稍后重试。':'本次未能可靠识别，无法据此判断数量为零。请换一张更清晰、遮挡更少的图片。'));$('status').textContent=unavailable?'GPU 资源暂不可用，图片已保留，可稍后重试。':'未得到可靠数量，可更换图片再试。';$('caption').textContent=unavailable?'原图预览 · 等待 GPU 资源恢复后可再次识别。':'原图预览 · 本次未得到可靠计数。';$('preview-hint').textContent='未显示不可靠标记';$('image-badge').textContent=unavailable?'GPU 资源暂不可用':deviceLabel+'需更清晰的图片'}else{points=Array.isArray(result.points)?result.points:[];$('count').textContent=Number(result.count).toLocaleString('zh-CN');$('count-unit').textContent=category==='laid_rods'||category==='rods'||category==='chopsticks'?'根':'个';$('count-unit').hidden=false;setResultState(candidate?'candidate':'success',candidate?'候选结果 · 请核对':'识别完成');showWarning(meta.user_message||(candidate?'这是可见目标的候选数量，请核对漏计与重复。':'请结合标记核对，密集或遮挡处可能漏计或重复。'));$('status').textContent=Number(meta.model_load_seconds)>0?'识别完成，本次包含模型加载耗时；请结合图片核对。':'识别完成，可在图片预览中核对每个标记。';$('caption').textContent=meta.count_kind==='visible_rod_candidates'?'每个端面标记对应一根可见筷子候选；未完整入镜部分不作总量推断。':points.some(point=>Array.isArray(point.segment))?'每条轴线对应一根，请核对相贴处与木纹。':points.length>120?'已标出可见目标，密集区域以圆点显示；局部放大可查看编号。':'每个标记对应一个识别目标，请核对漏计与重复。';$('preview-hint').textContent='按住看原图 · 鼠标悬停放大';$('image-badge').textContent=deviceLabel+(candidate?'可见目标候选':'识别标记')}if(valid)lastResultExemplarKey=useExemplars?JSON.stringify(payload.exemplar_points):null;updateExemplarControls();draw()}catch(error){if(version!==revision)return;clearResult();setResultState('error',timedOut?'等待超时':'识别未完成');showWarning(error.message||'无法连接本机服务，请稍后重试。');$('status').textContent=timedOut?'等待超时，可稍后重试或更换图片。':'识别未完成，请重试。';$('image-badge').textContent='原图预览'}finally{if(deadline!==null)clearTimeout(deadline);clearInterval(requestTimer);if(timer===requestTimer)timer=null;if(version===revision)setBusy(false)}}
+async function runCount(useExemplars=false){if(busy||!dataURL||(useExemplars&&(!exemplarEnabled()||!exemplarPoints.length)))return;commitRange();cancelGesture();if(useExemplars&&(['positive','negative'].some(polarity=>referenceGroup(polarity).some((point,index)=>referenceConflict(point,polarity,index))))){$('exemplar-state').textContent='正反例请选不同目标，示例中心不能重合。';return}const payload=useExemplars?{image:dataURL,exemplar_points:exemplarPoints.map(point=>({x:point.x,y:point.y,diameter:point.diameter})),engine:'smart'}:{image:dataURL};if(useExemplars&&negativeExemplarPoints.length)payload.negative_exemplar_points=negativeExemplarPoints.map(({x,y,diameter})=>({x,y,diameter}));const version=++revision;activeManual=useExemplars;clearResult();setBusy(true);setResultState('busy','正在识别');$('category').textContent='自动识别中';$('status').textContent='正在分析图片，请稍候。';$('image-badge').textContent='识别进行中';const started=performance.now(),requestTimer=startTimer(version),controller=new AbortController();let deadline=null,timedOut=false;try{const request=(async()=>{const response=await fetch('/api/count',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:controller.signal});let result;try{result=await response.json()}catch{throw Error(response.status===413?'图片过大，请缩小后重新上传。':'服务返回了无效结果，请重试。')}if(!response.ok)throw Error(result.error||'识别失败，请稍后重试。');return result})();const timeout=new Promise((resolve,reject)=>{deadline=setTimeout(()=>{timedOut=true;controller.abort();reject(Error('本次等待已超过 100 秒，已结束等待并保留原图。后台任务可能仍在处理，请稍候再试，避免重复提交。'))},100000)});const result=await Promise.race([request,timeout]);if(version!==revision)return;stopTimer();const meta=result.meta||{},valid=meta.prediction_valid!==false&&!['no_initial_exemplars','no_final_detections','no_candidates'].includes(meta.diagnosis)&&result.count!=null&&Number.isFinite(Number(result.count))&&Number.isInteger(Number(result.count))&&Number(result.count)>=0;const elapsed=Number(meta.total_elapsed_seconds??((performance.now()-started)/1000));$('elapsed').textContent=Number.isFinite(elapsed)?`耗时 ${elapsed.toFixed(2)} 秒`:'耗时 —';const candidateKinds={exemplar_candidates:'按示例检测候选',flat_end_candidates:'可见端面候选',insect_candidates:'可见昆虫候选',grain_candidates:'可见谷粒候选',sharp_candidates:'可见尖头候选',visible_candidates:'可见目标候选',rod_candidates:'整根长条候选',visible_rod_candidates:'可见筷子候选'},candidate=useExemplars||!!candidateKinds[meta.count_kind]||meta.framework==='CountGD++';$('count-label').textContent=candidateKinds[meta.count_kind]||(useExemplars?'按示例检测候选':candidate?'检测候选数':'识别数量');const deviceLabel=meta.device==='cuda'?'GPU · ':meta.device==='cpu'?'CPU · ':'';const hint=meta.scene_classification||{},category=meta.detected_category||meta.category||(hint.accepted?hint.scene:null);$('category').textContent=category?(categoryLabels[category]||category):'暂未确定目标';if(!valid){points=[];$('count').textContent='—';$('count-unit').hidden=true;const unavailable=meta.diagnosis==='gpu_resources_unavailable';setResultState('uncertain',unavailable?'资源暂不可用':'暂无法可靠计数');showWarning(useExemplars&&!unavailable?(payload.negative_exemplar_points?'本次正反例未得到可靠候选，不代表数量为零。请调整示例位置和范围，或清空反例再对照识别。':'本次示例未得到可靠候选。请调整位置和范围，让参考框包含一个清晰完整的目标。'):(meta.user_message||(unavailable?'当前 GPU 资源暂不可用，请稍后重试。':'本次未能可靠识别，无法据此判断数量为零。请换一张更清晰、遮挡更少的图片。')));$('status').textContent=unavailable?'GPU 资源暂不可用，图片已保留，可稍后重试。':useExemplars?'未得到可靠数量，图片和示例已保留，可调整示例后重数。':'未得到可靠数量，可更换图片再试。';$('caption').textContent=unavailable?'原图预览 · 等待 GPU 资源恢复后可再次识别。':useExemplars?'原图预览 · 调整目标示例后再试。':'原图预览 · 本次未得到可靠计数。';$('preview-hint').textContent='未显示不可靠标记';$('image-badge').textContent=unavailable?'GPU 资源暂不可用':deviceLabel+(useExemplars?'请调整目标示例':'需更清晰的图片')}else{points=Array.isArray(result.points)?result.points:[];$('count').textContent=Number(result.count).toLocaleString('zh-CN');$('count-unit').textContent=category==='laid_rods'||category==='rods'||category==='chopsticks'?'根':'个';$('count-unit').hidden=false;setResultState(candidate?'candidate':'success',candidate?'候选结果 · 请核对':'识别完成');showWarning(meta.user_message||(candidate?'这是可见目标的候选数量，请核对漏计与重复。':'请结合标记核对，密集或遮挡处可能漏计或重复。'));$('status').textContent=Number(meta.model_load_seconds)>0?'识别完成，本次包含模型加载耗时；请结合图片核对。':'识别完成，可在图片预览中核对每个标记。';$('caption').textContent=meta.count_kind==='visible_rod_candidates'?'每个端面标记对应一根可见筷子候选；未完整入镜部分不作总量推断。':points.some(point=>Array.isArray(point.segment))?'每条轴线对应一根，请核对相贴处与木纹。':points.length>120?'已标出可见目标，密集区域以圆点显示；局部放大可查看编号。':'每个标记对应一个识别目标，请核对漏计与重复。';$('preview-hint').textContent='按住看原图 · 鼠标悬停放大';$('image-badge').textContent=deviceLabel+(candidate?'可见目标候选':'识别标记')}if(valid)lastResultExemplarKey=useExemplars?JSON.stringify(referenceData(payload.exemplar_points,payload.negative_exemplar_points||[])):null;updateExemplarControls();draw()}catch(error){if(version!==revision)return;clearResult();setResultState('error',timedOut?'等待超时':'识别未完成');showWarning(error.message||'无法连接本机服务，请稍后重试。');$('status').textContent=timedOut?'等待超时，可稍后重试或更换图片。':'识别未完成，请重试。';$('image-badge').textContent='原图预览'}finally{if(deadline!==null)clearTimeout(deadline);clearInterval(requestTimer);if(timer===requestTimer)timer=null;if(version===revision)setBusy(false)}}
 $('run').onclick=()=>runCount(false);
 $('run-exemplars').onclick=()=>runCount(true);
 updateExemplarControls();

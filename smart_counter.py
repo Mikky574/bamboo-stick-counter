@@ -128,8 +128,13 @@ def review_sharp_predictions(result):
         meta['diagnosis'] = 'no_verified_sharp_regions'
 
 
-def detect_smart(image,exemplar_points=None):
+def detect_smart(image,exemplar_points=None,negative_exemplar_points=None):
     started = time.perf_counter()
+    manual_options={}
+    if negative_exemplar_points is not None:
+        from point_prompts import validate_negative_exemplar_points
+        manual_options['negative_exemplar_points']=validate_negative_exemplar_points(
+            negative_exemplar_points,exemplar_points,image.shape[1],image.shape[0])
     if exemplar_points is not None:
         from point_prompts import validate_exemplar_points
         from auto_counter import detect_auto
@@ -141,9 +146,12 @@ def detect_smart(image,exemplar_points=None):
             result['meta'].update(manual_exemplars=True,exemplar_points=references,
                 routing='user_examples_runtime_unavailable',retryable=True,
                 required_free_gpu_mib=MIN_GPU_FREE_MIB)
+            if manual_options:
+                result['meta'].update(negative_exemplar_points=manual_options['negative_exemplar_points'],
+                    user_negative_exemplar_count=len(manual_options['negative_exemplar_points']))
         else:
             result = detect_auto(image,'automatic',device,keep_warm=True,
-                                 exemplar_points=references)
+                                 exemplar_points=references,**manual_options)
             result['meta']['routing'] = 'user_points_then_visual_exemplars'
         result['meta']['total_elapsed_seconds'] = round(time.perf_counter()-started,3)
         return result

@@ -47,7 +47,7 @@ def readiness():
  return dict(installed=all(p.is_file() for p in required),missing=[str(p.relative_to(ROOT)) for p in required if not p.is_file()],
              runtime='isolated_subprocess',default_device='cpu',busy=_job_lock.locked(),**_warm_worker.snapshot())
 
-def detect_auto(image,category='bamboo',device='cpu',keep_warm=False,allow_category_recovery=False,exemplar_points=None):
+def detect_auto(image,category='bamboo',device='cpu',keep_warm=False,allow_category_recovery=False,exemplar_points=None,negative_exemplar_points=None):
  if category not in CATEGORIES:raise ValueError('未知计数对象。')
  if device not in {'cpu','auto','cuda'}:raise ValueError('未知运行设备。')
  if not isinstance(keep_warm,bool):raise ValueError('模型缓存开关必须是布尔值。')
@@ -59,6 +59,10 @@ def detect_auto(image,category='bamboo',device='cpu',keep_warm=False,allow_categ
  if exemplar_points is not None:
   from point_prompts import validate_exemplar_points
   settings['exemplar_points']=validate_exemplar_points(exemplar_points,image.shape[1],image.shape[0])
+ if negative_exemplar_points is not None:
+  from point_prompts import validate_negative_exemplar_points
+  settings['negative_exemplar_points']=validate_negative_exemplar_points(
+   negative_exemplar_points,settings.get('exemplar_points'),image.shape[1],image.shape[0])
  return _execute(image,'countgdpp',device,settings,keep_warm=keep_warm)
 
 def release_model():
@@ -94,6 +98,10 @@ def _execute(image,engine,device,settings,keep_warm=False):
      references=folder/'exemplar_points.json'
      references.write_text(json.dumps(settings['exemplar_points']),encoding='utf-8')
      command.extend(['--exemplar-points-file',str(references)])
+    if 'negative_exemplar_points' in settings:
+     negatives=folder/'negative_exemplar_points.json'
+     negatives.write_text(json.dumps(settings['negative_exemplar_points']),encoding='utf-8')
+     command.extend(['--negative-exemplar-points-file',str(negatives)])
    else:
     request=folder/'settings.json';request.write_text(json.dumps(settings),encoding='utf-8')
     command=[str(ROOT/'.venv/Scripts/python.exe'),str(ROOT/'geco2_worker.py'),str(source),str(request),str(result),device]
@@ -106,6 +114,7 @@ def _execute(image,engine,device,settings,keep_warm=False):
     job=dict(image=str(source.resolve()),output=str(result.resolve()),category=settings['category'])
     if settings.get('allow_category_recovery'):job['allow_category_recovery']=True
     if 'exemplar_points' in settings:job['exemplar_points']=settings['exemplar_points']
+    if 'negative_exemplar_points' in settings:job['negative_exemplar_points']=settings['negative_exemplar_points']
     reused=_warm_worker.request(command,job,
        cwd=ROOT,env=env,log_path=out/'countgdpp_server.log',timeout=WARM_REQUEST_TIMEOUT_SECONDS,creationflags=flags)
    else:

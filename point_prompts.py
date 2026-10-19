@@ -41,3 +41,23 @@ def exemplar_boxes(points, width, height):
     return [[max(0., p['x']-p['diameter']/2), max(0., p['y']-p['diameter']/2),
              min(float(width), p['x']+p['diameter']/2),
              min(float(height), p['y']+p['diameter']/2)] for p in points]
+
+
+def validate_negative_exemplar_points(negative_points, positive_points, width, height):
+    """Validate an explicitly supplied negative group against current positives.
+
+    Absence is handled by callers; an explicit null or empty group is invalid.
+    Negative examples express appearance to exclude, never count subtraction.
+    """
+    if positive_points is None:
+        raise ValueError('使用反例前，请至少选择一个要数的正例。')
+    positive_points = validate_exemplar_points(positive_points, width, height)
+    try:
+        negative_points = validate_exemplar_points(negative_points, width, height)
+    except ValueError as error:
+        raise ValueError('反例无效：'+str(error)) from error
+    for point in negative_points:
+        if any(math.hypot(point['x']-other['x'], point['y']-other['y']) < 2
+               for other in positive_points):
+            raise ValueError('同一位置不能同时作为正例和反例，请选择不同的对象。')
+    return negative_points

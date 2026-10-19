@@ -142,7 +142,7 @@ def load_runtime(torch,device):
  return _RUNTIME,time.perf_counter()-started
 
 def infer(image_path,category='bamboo',device='auto',threshold=.23,text=None,
-          allow_category_recovery=False,exemplar_points=None):
+          allow_category_recovery=False,exemplar_points=None,negative_exemplar_points=None):
  """A failed system route may reselect once; explicit text is never replaced.
 
  Keep the first pass in its own scope so its tensors are released before the
@@ -151,8 +151,13 @@ def infer(image_path,category='bamboo',device='auto',threshold=.23,text=None,
  """
  if not isinstance(allow_category_recovery,bool):
   raise ValueError('Category recovery must be a boolean')
+ if negative_exemplar_points is not None and exemplar_points is None:
+  raise ValueError('使用反例前，请至少选择一个要数的正例。')
  if exemplar_points is not None:
   if text is not None:raise ValueError('User point examples cannot be combined with a text override')
+  if negative_exemplar_points is not None:
+   return infer_point_examples(image_path,exemplar_points,device,threshold,
+                               negative_exemplar_points=negative_exemplar_points)
   return infer_point_examples(image_path,exemplar_points,device,threshold)
  result=_infer_once(image_path,category,device,threshold,text)
  meta=result['meta']
@@ -181,7 +186,29 @@ def infer(image_path,category='bamboo',device='auto',threshold=.23,text=None,
  return target
 
 
-def infer_point_examples(image_path,points,device='auto',threshold=.23):
+def positive_negative_scores(output):
+ """Split injected visual-token labels as in the vendored official demo.
+
+ The first period terminates positive label 0; all following tokens belong to
+ the negative label. Never allow a strong negative score to become a detection.
+ """
+ import torch
+ probabilities=output['pred_logits'][0].sigmoid()
+ token_ids=output['input_ids'][0]
+ separators=torch.where(token_ids==1012)[0]
+ if not len(separators):raise RuntimeError('正反例标签分隔信息缺失，无法可靠计数。')
+ split=int(separators[0])
+ if (split<1 or len(token_ids)>probabilities.shape[-1] or
+     not bool((token_ids[1:split]==1008).any()) or
+     not bool((token_ids[split+1:]==1008).any())):
+  raise RuntimeError('正反例视觉标签缺失，无法可靠计数。')
+ # Use only present tokens; padded logits outside input_ids carry no label.
+ return (probabilities[:,:split+1].max(-1).values,
+         probabilities[:,split+1:len(token_ids)].max(-1).values)
+
+
+def infer_point_examples(image_path,points,device='auto',threshold=.23,
+                         negative_exemplar_points=None):
  """Condition on user visual boxes directly, without automatic pseudo-examples.
 
  The generic caption intentionally avoids the previous scene label overriding
@@ -189,10 +216,15 @@ def infer_point_examples(image_path,points,device='auto',threshold=.23):
  """
  started=time.perf_counter()
  from PIL import Image
- from point_prompts import validate_exemplar_points,exemplar_boxes
+ from point_prompts import validate_exemplar_points,validate_negative_exemplar_points,exemplar_boxes
  image=Image.open(image_path).convert('RGB');width,height=image.size
  points=validate_exemplar_points(points,width,height)
  boxes=exemplar_boxes(points,width,height)
+ negative_boxes=[]
+ if negative_exemplar_points is not None:
+  negative_exemplar_points=validate_negative_exemplar_points(
+   negative_exemplar_points,points,width,height)
+  negative_boxes=exemplar_boxes(negative_exemplar_points,width,height)
  import torch
  import numpy as np
  from torchvision.ops import box_convert,nms
@@ -207,13 +239,28 @@ def infer_point_examples(image_path,points,device='auto',threshold=.23):
  tensor=tensor.to(device);nested=runtime['nested_tensor'](tensor[None])
  reference=torch.tensor(boxes,dtype=torch.float32,device=device)*torch.tensor(
   [tensor.shape[-1]/width,tensor.shape[-2]/height]*2,device=device)
+ negative_reference=None
+ if negative_boxes:
+  negative_reference=torch.tensor(negative_boxes,dtype=torch.float32,device=device)*torch.tensor(
+   [tensor.shape[-1]/width,tensor.shape[-2]/height]*2,device=device)
  if device=='cuda':torch.cuda.synchronize()
  preprocess_seconds=time.perf_counter()-phase
  phase=time.perf_counter()
  with torch.inference_mode():
-  output=runtime['model'](nested,nested,[reference],[],[],captions=['object .'])
-  scores=output['pred_logits'][0].sigmoid().max(-1).values
-  selected=torch.where(scores>threshold)[0]
+  if negative_reference is None:
+   output=runtime['model'](nested,nested,[reference],[],[],captions=['object .'])
+   scores=output['pred_logits'][0].sigmoid().max(-1).values
+   selected=torch.where(scores>threshold)[0]
+   negative_rejected=0
+  else:
+   # One native positive/negative forward, with one negative class containing
+   # the current image's negative boxes. Empty text leaves label 1 visual-only.
+   output=runtime['model'](nested,nested,[reference],[nested],[[negative_reference]],
+                           captions=['object . .'])
+   scores,negative_scores=positive_negative_scores(output)
+   positive_mask=scores>threshold
+   negative_rejected=int((positive_mask & (scores<=negative_scores)).sum())
+   selected=torch.where(positive_mask & (scores>negative_scores))[0]
   xyxy=box_convert(output['pred_boxes'][0,selected],'cxcywh','xyxy').clamp(0,1)
   keep=nms(xyxy,scores[selected],.7) if len(selected) else selected
   raw_count=int(len(selected));selected=selected[keep]
@@ -228,7 +275,7 @@ def infer_point_examples(image_path,points,device='auto',threshold=.23):
   predictions.append(dict(x=round(x,2),y=round(y,2),r=round(max(2.,min(box[2]-box[0],box[3]-box[1])/2),2),
    box=[round(v,2) for v in box],score=round(score,4)))
  predictions.sort(key=lambda p:(round(p['y']/24),p['x']))
- return dict(count=len(predictions) if predictions else None,points=predictions,
+ result=dict(count=len(predictions) if predictions else None,points=predictions,
   width=width,height=height,exemplars=boxes,
   meta=dict(framework='CountGD++',mode='user_point_visual_exemplars',category='user_examples',
    detected_category='user_examples',automatic_category=False,manual_exemplars=True,
@@ -244,6 +291,16 @@ def infer_point_examples(image_path,points,device='auto',threshold=.23):
    count_kind='exemplar_candidates',count_is_total=False,review_required=True,
    score_type='uncalibrated_token_score',
    user_message='已根据你点选的目标示例重新检测整张图片；示例点本身不会直接加到数量里。仍需核对漏检和重复；若范围含相邻目标或杆身，请调整示例大小后重试。'))
+ if negative_boxes:
+  result['negative_exemplars']=negative_boxes
+  result['meta'].update(negative_exemplar_points=negative_exemplar_points,
+   user_negative_exemplar_count=len(negative_exemplar_points),
+   negative_exemplar_method='native_negative_visual_tokens',
+   prompt_source='generic_positive_caption_with_negative_visual_examples',
+   visual_caption='object . .',positive_negative_filter='positive_above_threshold_and_negative',
+   negative_rejected_prediction_count=negative_rejected,
+   user_message='已根据正例寻找相似目标，并参考反例排除不想统计的对象；不会按选点数量加减。结果仍可能漏检或误删，请核对。')
+ return result
 
 
 def _infer_once(image_path,category='bamboo',device='auto',threshold=.23,text=None):
@@ -440,7 +497,8 @@ def serve(device):
     else:
      result=infer(request['image'],request.get('category','bamboo'),device,
                   allow_category_recovery=request.get('allow_category_recovery',False),
-                  exemplar_points=request.get('exemplar_points'))
+                  exemplar_points=request.get('exemplar_points'),
+                  negative_exemplar_points=request.get('negative_exemplar_points'))
      result['meta']['process_lifetime']='gpu_session'
     Path(request['output']).write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
    reply=dict(ok=True)
@@ -453,13 +511,16 @@ def main():
  p.add_argument('--device',choices=['auto','cpu','cuda'],default='auto');p.add_argument('--threshold',type=float,default=.23)
  p.add_argument('--text');p.add_argument('--output');p.add_argument('--serve',action='store_true')
  p.add_argument('--exemplar-points-file')
+ p.add_argument('--negative-exemplar-points-file')
  p.add_argument('--recover-category',action='store_true');a=p.parse_args()
  if a.serve:return serve(a.device)
  if not a.image or not a.output:p.error('image and --output are required unless --serve is used')
  if not .05<=a.threshold<=.95:p.error('Threshold must be in [0.05,0.95]')
  examples=json.loads(Path(a.exemplar_points_file).read_text(encoding='utf-8')) if a.exemplar_points_file else None
  if a.exemplar_points_file and examples is None:p.error('Example points file must contain a nonempty array')
- result=infer(a.image,a.category,a.device,a.threshold,a.text,a.recover_category,examples)
+ negatives=json.loads(Path(a.negative_exemplar_points_file).read_text(encoding='utf-8')) if a.negative_exemplar_points_file else None
+ if a.negative_exemplar_points_file and negatives is None:p.error('Negative example points file must contain a nonempty array')
+ result=infer(a.image,a.category,a.device,a.threshold,a.text,a.recover_category,examples,negatives)
  out=Path(a.output);out.parent.mkdir(parents=True,exist_ok=True);out.write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
  print(json.dumps(dict(count=result['count'],meta=result['meta']),ensure_ascii=False),flush=True)
 if __name__=='__main__':main()

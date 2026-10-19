@@ -50,6 +50,7 @@ function tap(p,x,y,options={}){const event=pointer(x,y,options);fire(p,'canvas',
 function drag(p,from,to,options={}){const first=pointer(...from,options),last=pointer(...to,options);fire(p,'canvas','pointerdown',first);fire(p,'canvas','pointermove',last);fire(p,'canvas','pointerup',last);p.events.get('pointerup')?.(last)}
 function key(p,value,options={}){let prevented=false;const event={key:value,target:p.get('canvas'),ctrlKey:false,metaKey:false,shiftKey:false,altKey:false,preventDefault(){prevented=true},...options};p.events.get('keydown')?.(event);return prevented}
 function range(p,value,commit=true){p.get('exemplar-size').value=String(value);fire(p,'exemplar-size','input');if(commit)fire(p,'exemplar-size','change')}
+function polarity(p,value){p.get('exemplar-'+value).onclick()}
 async function test(name,fn){await fn();console.log('PASS '+name)}
 (async()=>{
  await test('upload readiness and image-only request',async()=>{
@@ -305,5 +306,106 @@ async function test(name,fn){await fn();console.log('PASS '+name)}
   p.get('exemplar-done').onclick();assert.equal(p.evaluate('JSON.stringify(exemplarPoints)'),selected);
   p.get('exemplar-edit').onclick();assert(p.evaluate('viewPan.x')<=200);assert.equal(p.evaluate('JSON.stringify(exemplarPoints)'),selected);
  });
- console.log('34 page behavior checks passed; no browser or GPU used.');
+ await test('negative examples need a positive target before they can be submitted',async()=>{
+  const p=page();await p.load();enableExemplars(p);polarity(p,'negative');tap(p,300,100);
+  assert.equal(p.evaluate('exemplarPoints.length'),0);assert.equal(p.evaluate('negativeExemplarPoints.length'),1);
+  assert.equal(p.get('run-exemplars').disabled,true);assert.match(p.get('exemplar-state').textContent,/至少.*正例/);
+  await p.get('run-exemplars').onclick();assert.equal(p.state.fetchCalls,0);
+  polarity(p,'positive');tap(p,100,100);assert.equal(p.get('run-exemplars').disabled,false);
+  p.fixture(result(7));await p.get('run-exemplars').onclick();const payload=JSON.parse(p.calls[0].options.body);
+  assert.deepEqual(payload.exemplar_points,[{x:100,y:100,diameter:25}]);assert.deepEqual(payload.negative_exemplar_points,[{x:300,y:100,diameter:25}]);
+  assert.equal(payload.engine,'smart');assert.equal(p.get('count').textContent,'7');assert.equal(p.evaluate('points.length'),7);
+  assert.equal(p.get('result-card').dataset.state,'candidate');
+ });
+ await test('positive and negative examples each have three slots and distinct labels',async()=>{
+  const p=page();await p.load();enableExemplars(p);for(const x of [100,200,300])tap(p,x,100);tap(p,400,100);
+  polarity(p,'negative');for(const x of [100,200,300])tap(p,x,250);tap(p,400,250);
+  assert.equal(p.evaluate('exemplarPoints.length'),3);assert.equal(p.evaluate('negativeExemplarPoints.length'),3);
+  assert.equal(p.get('exemplar-positive-count').textContent,'3 / 3');assert.equal(p.get('exemplar-negative-count').textContent,'3 / 3');
+  const labels=p.get('canvas').context.commands.filter(command=>command[0]==='fillText').map(command=>command[1]);
+  for(const label of ['E1','E2','E3','N1','N2','N3'])assert(labels.includes(label),label);
+  assert.equal(p.get('exemplar-card-label-0').textContent,'反例 N1');assert.equal(p.get('exemplar-negative').getAttribute('aria-pressed'),'true');
+  assert.match(p.get('exemplar-preview').getAttribute('aria-label'),/反例/);assert.equal(p.get('exemplar-preview').context.strokeStyle,'#b94b43');
+  assert.match(p.get('exemplar-range-help').textContent,/红框/);
+  polarity(p,'positive');assert.equal(p.get('exemplar-card-label-0').textContent,'正例 E1');assert.equal(p.get('exemplar-preview').context.strokeStyle,'#315bc4');
+ });
+ await test('clicking an example in the other group selects and moves that group only',async()=>{
+  const p=page();await p.load();enableExemplars(p);tap(p,100,100);range(p,40);polarity(p,'negative');tap(p,300,100);range(p,60);
+  polarity(p,'positive');drag(p,[300,100],[340,150]);assert.equal(p.evaluate('exemplarPolarity'),'negative');
+  assert.equal(p.evaluate('negativeExemplarPoints[0].x'),340);assert.equal(p.evaluate('negativeExemplarPoints[0].y'),150);assert.equal(p.evaluate('negativeExemplarPoints[0].diameter'),60);
+  assert.equal(p.evaluate('exemplarPoints[0].x'),100);assert.equal(p.evaluate('exemplarPoints[0].diameter'),40);
+  drag(p,[370,180],[390,200]);assert.equal(p.evaluate('negativeExemplarPoints[0].diameter'),100);assert.equal(p.evaluate('negativeExemplarPoints[0].x'),340);
+  assert.equal(p.evaluate('exemplarPoints[0].diameter'),40);
+ });
+ await test('keyboard delete and global undo restore the correct example group',async()=>{
+  const p=page();await p.load();enableExemplars(p);tap(p,100,100);polarity(p,'negative');tap(p,300,100);
+  key(p,'Delete');assert.equal(p.evaluate('negativeExemplarPoints.length'),0);assert.equal(p.evaluate('exemplarPoints.length'),1);
+  key(p,'z',{ctrlKey:true});assert.equal(p.evaluate('negativeExemplarPoints.length'),1);assert.equal(p.evaluate('exemplarPolarity'),'negative');
+  polarity(p,'positive');key(p,'Delete');assert.equal(p.evaluate('exemplarPoints.length'),0);assert.equal(p.evaluate('negativeExemplarPoints.length'),1);assert.equal(p.get('run-exemplars').disabled,true);
+  key(p,'z',{ctrlKey:true});assert.equal(p.evaluate('exemplarPoints.length'),1);assert.equal(p.evaluate('exemplarPolarity'),'positive');
+  polarity(p,'negative');p.get('exemplar-clear').onclick();assert.equal(p.evaluate('negativeExemplarPoints.length'),0);assert.equal(p.evaluate('exemplarPoints.length'),1);
+  p.get('exemplar-undo').onclick();assert.equal(p.evaluate('negativeExemplarPoints.length'),1);assert.equal(p.evaluate('exemplarPoints.length'),1);
+  polarity(p,'positive');p.get('exemplar-undo').onclick();assert.equal(p.evaluate('negativeExemplarPoints.length'),0);assert.equal(p.evaluate('exemplarPoints.length'),1);
+ });
+ await test('a negative example cannot be dragged onto a positive example',async()=>{
+  const p=page();await p.load();enableExemplars(p);tap(p,100,100);polarity(p,'negative');tap(p,300,100);const before=p.evaluate('exemplarKey()');
+  drag(p,[300,100],[101,100]);assert.equal(p.evaluate('exemplarKey()'),before);assert.match(p.get('exemplar-state').textContent,/不能重合/);
+  assert.equal(p.evaluate('exemplarPoints[0].x'),100);assert.equal(p.evaluate('negativeExemplarPoints[0].x'),300);
+  fire(p,'canvas','pointerdown',pointer(300,100));fire(p,'canvas','pointermove',pointer(330,140));key(p,'Escape');assert.equal(p.evaluate('exemplarKey()'),before);
+ });
+ await test('negative range changes mark results dirty and undo restores the submitted references',async()=>{
+  const p=page();await p.load();enableExemplars(p);tap(p,100,100);range(p,40);polarity(p,'negative');tap(p,300,100);range(p,50);
+  p.fixture(result(9));await p.get('run-exemplars').onclick();assert.equal(p.get('exemplar-dirty').hidden,true);
+  polarity(p,'positive');assert.equal(p.get('exemplar-dirty').hidden,true);polarity(p,'negative');range(p,80);
+  assert.equal(p.get('exemplar-dirty').hidden,false);assert.equal(p.get('count').textContent,'9');assert.equal(p.evaluate('exemplarPoints[0].diameter'),40);
+  p.get('exemplar-undo').onclick();assert.equal(p.get('exemplar-dirty').hidden,true);assert.equal(p.evaluate('negativeExemplarPoints[0].diameter'),50);
+ });
+ await test('collapsed editing keeps both groups for recount and reopens the selected negative example',async()=>{
+  const p=page();await p.load();enableExemplars(p);tap(p,100,100);polarity(p,'negative');tap(p,300,100);range(p,55);const before=p.evaluate('exemplarKey()');
+  p.get('exemplar-done').onclick();assert.equal(p.get('exemplar-bottom').hidden,false);tap(p,500,300);assert.equal(p.evaluate('exemplarKey()'),before);
+  p.fixture(result(6));await p.get('run-exemplars').onclick();assert.equal(JSON.parse(p.calls[0].options.body).negative_exemplar_points.length,1);
+  p.get('exemplar-edit').onclick();assert.equal(p.evaluate('exemplarPolarity'),'negative');assert.equal(p.evaluate('exemplarKey()'),before);assert.equal(Number(p.get('exemplar-size').value),55);
+ });
+ await test('both groups and their tabs are locked during inference and preserved on failure',async()=>{
+  const p=page();await p.load();enableExemplars(p);tap(p,100,100);polarity(p,'negative');tap(p,300,100);const before=p.evaluate('exemplarKey()');let deliver;
+  p.state.response=()=>new Promise(resolve=>deliver=resolve);const running=p.get('run-exemplars').onclick();await p.flush();
+  for(const id of ['exemplar-positive','exemplar-negative','exemplar-delete','exemplar-clear','exemplar-edit'])assert.equal(p.get(id).disabled,true,id);
+  polarity(p,'positive');key(p,'Delete');tap(p,400,300);p.get('exemplar-clear').onclick();assert.equal(p.evaluate('exemplarPolarity'),'negative');assert.equal(p.evaluate('exemplarKey()'),before);
+  deliver({ok:false,status:503,json:async()=>({error:'模型暂不可用'})});await running;assert.equal(p.evaluate('exemplarKey()'),before);assert.equal(p.get('run-exemplars').disabled,false);
+  await p.load();assert.equal(p.evaluate('exemplarPoints.length'),0);assert.equal(p.evaluate('negativeExemplarPoints.length'),0);assert.equal(p.evaluate('exemplarPolarity'),'positive');
+ });
+ await test('negative examples survive a timeout while stale replies cannot restore a replaced image',async()=>{
+  const p=page();await p.load();enableExemplars(p);tap(p,100,100);polarity(p,'negative');tap(p,300,100);let deliver;
+  p.state.response=()=>new Promise(resolve=>deliver=resolve);const running=p.get('run-exemplars').onclick();await p.flush();await p.advance(100000);await running;
+  assert.equal(p.evaluate('exemplarPoints.length'),1);assert.equal(p.evaluate('negativeExemplarPoints.length'),1);assert.equal(p.get('result-state').textContent,'等待超时');
+  await p.load();deliver({ok:true,status:200,json:async()=>result(99)});await p.flush();assert.equal(p.get('count').textContent,'—');assert.equal(p.evaluate('negativeExemplarPoints.length'),0);assert.equal(p.evaluate('points.length'),0);
+ });
+ await test('ordinary automatic counting ignores both groups and empty negative arrays are never sent',async()=>{
+  const p=page();await p.load();enableExemplars(p);tap(p,100,100);polarity(p,'negative');tap(p,300,100);
+  await p.run(result(4));assert.deepEqual(Object.keys(JSON.parse(p.calls[0].options.body)),['image']);assert.equal(p.evaluate('negativeExemplarPoints.length'),1);
+  p.get('exemplar-clear').onclick();p.fixture(result(5));await p.get('run-exemplars').onclick();const payload=JSON.parse(p.calls[1].options.body);
+  assert.equal(Object.hasOwn(payload,'negative_exemplar_points'),false);assert.equal(payload.exemplar_points.length,1);assert.equal(p.get('count').textContent,'5');
+ });
+ await test('deleting or clearing while dragging safely ends the gesture in either group',async()=>{
+  for(const role of ['positive','negative']){
+   const p=page();await p.load();enableExemplars(p);tap(p,100,100);polarity(p,'negative');tap(p,300,100);polarity(p,role);const x=role==='positive'?100:300,other=role==='positive'?'negativeExemplarPoints':'exemplarPoints',group=role==='positive'?'exemplarPoints':'negativeExemplarPoints';
+   fire(p,'canvas','pointerdown',pointer(x,100));fire(p,'canvas','pointermove',pointer(x+30,120));key(p,'Delete');
+   assert.equal(p.evaluate('exemplarGesture'),null);assert.equal(p.evaluate(group+'.length'),0);assert.equal(p.evaluate(other+'.length'),1);
+   fire(p,'canvas','pointerup',pointer(x+30,120));p.events.get('pointerup')(pointer(x+30,120));key(p,'z',{ctrlKey:true});
+   assert.equal(p.evaluate(group+'[0].x'),x);assert.equal(p.evaluate(group+'[0].y'),100);
+   fire(p,'canvas','pointerdown',pointer(x,100));fire(p,'canvas','pointermove',pointer(x+40,130));p.get('exemplar-clear').onclick();
+   assert.equal(p.evaluate('exemplarGesture'),null);fire(p,'canvas','pointerup',pointer(x+40,130));assert.equal(p.evaluate(group+'.length'),0);assert.equal(p.evaluate(other+'.length'),1);
+   p.get('exemplar-undo').onclick();assert.equal(p.evaluate(group+'[0].x'),x);
+  }
+ });
+ await test('empty positive-negative results preserve examples and suggest adjusting references',async()=>{
+  const p=page();await p.load();enableExemplars(p);tap(p,100,100);polarity(p,'negative');tap(p,300,100);
+  p.fixture(result(null,{prediction_valid:false,diagnosis:'no_final_detections',device:'cuda',user_message:'已按正反例处理，请核对'}));
+  await p.get('run-exemplars').onclick();assert.equal(p.get('count').textContent,'—');
+  assert.equal(p.evaluate('exemplarPoints.length'),1);assert.equal(p.evaluate('negativeExemplarPoints.length'),1);
+  assert.match(p.get('warning').textContent,/清空反例/);assert.match(p.get('warning').textContent,/不代表数量为零/);
+  assert.match(p.get('image-badge').textContent,/调整目标示例/);assert.doesNotMatch(p.get('image-badge').textContent,/清晰/);
+  assert.equal(p.get('run-exemplars').disabled,false);assert.notEqual(p.evaluate('dataURL'),'');
+ });
+ console.log('46 page behavior checks passed; no browser or GPU used.');
 })().catch(error=>{console.error(error);process.exitCode=1});
