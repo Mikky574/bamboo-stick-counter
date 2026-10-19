@@ -16,6 +16,14 @@ TinyCLIP 仅为未配置活动分类权重时的可选历史回退，当前发�
 
 只有已接受米粒类别、原提示在阈值0.23下零初始候选时，才尝试 `brown rice grain`；至少三个经NMS去重候选才采用。自定义文本、其他类别、独立自动类别探测或原提示已有候选均不触发，阈值不降低。结果仅为可见谷粒／断粒候选，含裁边，不能视为完整整粒总数。
 
+## CPU／GPU 数值一致性（发布后修正）
+
+当前工作区的 CountGD++ 加载和预热统一禁用 CUDA 矩阵乘法及 cuDNN 卷积 TF32，固定 `cudnn.benchmark=False`、`cudnn.deterministic=True`。返回元数据 `numeric_policy.name=full_fp32` 供迁移端核对；v0.2.0 已发布压缩包尚未包含此修正，模型权重无需更换。
+
+本地绿豆密集图使用同一 `green mung bean` 提示、0.23阈值、同一图像及权重时，原 GPU 策略重复为242、CPU为243候选；仅关闭卷积TF32后GPU为243。更改精度会改变初始参考框排名，进而影响第二次检测，因此不能只把差异解释为最后一个分数四舍五入。后续原图核验发现一处相同边缘豆被两个重合框重复计数，243不能视为准确总数；本修正也没有改变默认绿豆提示、分类路由或最终去重规则。
+
+CPU 与 CUDA 底层算子仍可能产生微小数值差异；上述设置改善一致性，不保证所有图片、硬件和软件版本严格相同。迁移验收应固定完整链路、权重、提示、图像缩放、阈值和后处理，并比较目标位置及数量；需要严格统一输出时应由同一个受控推理后端出结果。PyTorch的[数值精度说明](https://docs.pytorch.org/docs/stable/notes/numerical_accuracy.html)与[复现说明](https://docs.pytorch.org/docs/stable/notes/randomness.html)解释了此限制。
+
 ## 显存含义
 
 常驻保存权重及必要状态。推理还需要输入、特征、注意力与示例中间张量；CUDA上下文和PyTorch缓存分配器也占用显存。`allocated` 是活跃PyTorch张量，`reserved` 包含保留缓存；整卡 `nvidia-smi` 还含其他进程，指标不能直接互换。

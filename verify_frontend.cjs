@@ -10,11 +10,11 @@ function page(){
  for(const match of html.matchAll(/\bid="([^"]+)"/g)){
   const id=match[1];assert(!elements.has(id),'Duplicate DOM id '+id);
   const listeners=new Map();
-  const element={id,hidden:false,disabled:false,textContent:'',value:'',style:{},dataset:{},offsetWidth:180,
+  const element={id,hidden:false,disabled:false,checked:false,textContent:'',value:'',style:{},dataset:{},offsetWidth:180,
    classList:{add(){},remove(){},toggle(){}},addEventListener(name,fn){listeners.set(name,fn)},listeners,
    getBoundingClientRect(){return{left:0,top:0,width:800,height:500}},width:360,height:360};
   const context={canvas:element,commands:[],measureText(text){return{width:String(text).length*8}}};
-  for(const name of ['drawImage','clearRect','beginPath','moveTo','lineTo','stroke','arc','fill','fillRect','strokeText','fillText'])context[name]=(...args)=>context.commands.push([name,...args]);
+  for(const name of ['drawImage','clearRect','beginPath','moveTo','lineTo','stroke','arc','fill','fillRect','strokeRect','strokeText','fillText'])context[name]=(...args)=>context.commands.push([name,...args]);
   element.context=context;element.getContext=()=>context;elements.set(id,element);
  }
  const state={response:null,width:800,height:500,readers:[],fetchCalls:0,now:0};
@@ -40,6 +40,8 @@ function page(){
  return{elements,events,calls,state,browser,timers,evaluate,fixture,load,run,advance,flush,get:id=>elements.get(id)};
 }
 function result(count=2,meta={}){return{count,width:800,height:500,points:Array.from({length:count??0},(_,i)=>({x:10+i*3,y:20})),meta:{prediction_valid:true,...meta}}}
+function enableExemplars(p){p.get('exemplar-enabled').checked=true;p.get('exemplar-enabled').onchange()}
+function tap(p,x,y,options={}){const event={clientX:x,clientY:y,button:0,pointerId:1,pointerType:'mouse',preventDefault(){},...options};p.get('canvas').listeners.get('pointerdown')(event);p.get('canvas').listeners.get('pointerup')(event)}
 async function test(name,fn){await fn();console.log('PASS '+name)}
 (async()=>{
  await test('upload readiness and image-only request',async()=>{
@@ -120,5 +122,61 @@ async function test(name,fn){await fn();console.log('PASS '+name)}
   await p.advance(99000);await older;assert.equal(p.get('run').disabled,true);assert.equal(p.get('result-card').dataset.state,'busy');assert.equal(p.calls.at(-1).options.signal.aborted,false);
   deliver({ok:true,status:200,json:async()=>result(3)});await newer;assert.equal(p.get('count').textContent,'3');assert.equal(p.get('run').disabled,false);assert.equal(p.timers.size,0);
  });
- console.log('14 page behavior checks passed; no browser or GPU used.');
+ await test('optional reference selection maps native pixels and ignores canvas margins',async()=>{
+  const p=page();p.state.width=3000;p.state.height=2000;await p.load();
+  assert.equal(p.get('exemplar-enabled').checked,false);assert.equal(p.get('run-exemplars').disabled,true);
+  assert.equal(p.evaluate('exemplarDiameter'),100);enableExemplars(p);
+  p.get('canvas').getBoundingClientRect=()=>({left:170,top:90,width:600,height:400});
+  tap(p,470,290);assert.equal(p.evaluate('exemplarPoints[0].x'),1500);assert.equal(p.evaluate('exemplarPoints[0].y'),1000);
+  tap(p,169,290);tap(p,770,290);tap(p,470,89);tap(p,470,490);
+  assert.equal(p.evaluate('exemplarPoints.length'),1);assert.equal(p.get('run-exemplars').disabled,false);
+  p.get('exemplar-size').value='60';p.get('exemplar-size').oninput();assert.equal(p.evaluate('exemplarDiameter'),60);
+  const box=p.get('canvas').context.commands.filter(c=>c[0]==='strokeRect').at(-1);
+  assert(Math.abs(box[3]-40)<0.01);assert(Math.abs(box[4]-39.99)<0.1);
+  assert(p.get('canvas').context.commands.some(c=>c[0]==='fillText'&&c[1]==='E1'));
+ });
+ await test('touch taps select up to three references; scroll gestures and cancellation do not',async()=>{
+  const p=page();await p.load();enableExemplars(p);tap(p,100,100,{pointerType:'touch'});
+  p.get('canvas').listeners.get('pointerdown')({clientX:150,clientY:100,button:0,pointerId:2,pointerType:'touch'});
+  p.get('canvas').listeners.get('pointerup')({clientX:150,clientY:140,button:0,pointerId:2,pointerType:'touch',preventDefault(){}});
+  p.get('canvas').listeners.get('pointerdown')({clientX:150,clientY:100,button:0,pointerId:2,pointerType:'touch'});
+  p.events.get('pointercancel')();p.get('canvas').listeners.get('pointerup')({clientX:150,clientY:100,button:0,pointerId:2,pointerType:'touch',preventDefault(){}});
+  assert.equal(p.evaluate('exemplarPoints.length'),1);assert.equal(p.evaluate('originalHeld'),false);
+  tap(p,200,200,{pointerType:'touch'});tap(p,300,300);tap(p,400,400);
+  assert.equal(p.evaluate('exemplarPoints.length'),3);assert.match(p.get('exemplar-state').textContent,/最多选择 3/);
+  p.get('exemplar-undo').onclick();assert.equal(p.evaluate('exemplarPoints.length'),2);
+  p.get('exemplar-clear').onclick();assert.equal(p.evaluate('exemplarPoints.length'),0);assert.equal(p.get('run-exemplars').disabled,true);
+  await p.get('run-exemplars').onclick();assert.equal(p.state.fetchCalls,0);
+ });
+ await test('reference request carries visual examples; ordinary counting still sends only image',async()=>{
+  const p=page();await p.load();enableExemplars(p);tap(p,123,234);
+  p.get('exemplar-size').value='32';p.get('exemplar-size').oninput();
+  p.fixture(result(5,{framework:'CountGD++',category:'bamboo'}));await p.get('run-exemplars').onclick();
+  const payload=JSON.parse(p.calls[0].options.body);
+  assert.deepEqual(payload,{image:'data:image/png;base64,AA',exemplar_points:[{x:123,y:234,diameter:32}],engine:'smart'});
+  assert.equal(p.get('count').textContent,'5');assert.equal(p.evaluate('points.length'),5);assert.equal(p.evaluate('exemplarPoints.length'),1);
+  assert.equal(p.get('result-card').dataset.state,'candidate');
+  const commands=p.get('canvas').context.commands,labels=commands.filter(c=>c[0]==='fillText');assert.equal(labels.at(-1)[1],'E1');
+  await p.run(result(2));assert.deepEqual(Object.keys(JSON.parse(p.calls[1].options.body)),['image']);assert.equal(p.evaluate('exemplarPoints.length'),1);
+  p.get('exemplar-enabled').checked=false;p.get('exemplar-enabled').onchange();assert.equal(p.get('run-exemplars').disabled,true);
+  await p.get('run-exemplars').onclick();assert.equal(p.state.fetchCalls,2);
+ });
+ await test('references remain separate from predictions and are locked during inference',async()=>{
+  const p=page();await p.load();enableExemplars(p);tap(p,100,100);let deliver;
+  p.state.response=()=>new Promise(resolve=>deliver=resolve);const running=p.get('run-exemplars').onclick();await p.flush();
+  for(const id of ['exemplar-enabled','exemplar-size','exemplar-undo','exemplar-clear','run-exemplars'])assert.equal(p.get(id).disabled,true,id);
+  tap(p,200,200);p.get('exemplar-clear').onclick();p.get('exemplar-undo').onclick();p.get('exemplar-size').value='99';p.get('exemplar-size').oninput();
+  assert.equal(p.evaluate('exemplarPoints.length'),1);assert.equal(p.evaluate('exemplarDiameter'),25);
+  deliver({ok:true,status:200,json:async()=>result(null,{prediction_valid:false,diagnosis:'no_final_detections'})});await running;
+  assert.equal(p.get('count').textContent,'—');assert.equal(p.evaluate('points.length'),0);assert.equal(p.evaluate('exemplarPoints.length'),1);assert.equal(p.get('run-exemplars').disabled,false);
+  await p.load();assert.equal(p.evaluate('exemplarPoints.length'),0);assert.equal(p.get('exemplar-enabled').checked,false);assert.equal(p.get('run-exemplars').disabled,true);
+ });
+ await test('reference counting keeps timeout behavior and ignores a stale result',async()=>{
+  const p=page();await p.load();enableExemplars(p);tap(p,100,100);let deliver;
+  p.state.response=()=>new Promise(resolve=>deliver=resolve);const running=p.get('run-exemplars').onclick();await p.flush();await p.advance(100000);await running;
+  assert.equal(p.get('result-state').textContent,'等待超时');assert.equal(p.evaluate('exemplarPoints.length'),1);assert.equal(p.get('run-exemplars').disabled,false);assert.equal(p.timers.size,0);
+  await p.load();deliver({ok:true,status:200,json:async()=>result(99)});await p.flush();
+  assert.equal(p.get('count').textContent,'—');assert.equal(p.evaluate('points.length'),0);assert.equal(p.evaluate('exemplarPoints.length'),0);
+ });
+ console.log('19 page behavior checks passed; no browser or GPU used.');
 })().catch(error=>{console.error(error);process.exitCode=1});

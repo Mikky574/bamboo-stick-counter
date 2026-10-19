@@ -8,7 +8,7 @@ from runtime_capacity import COUNTGDPP_IDLE_TIMEOUT_SECONDS
 ROOT=Path(__file__).resolve().parent
 _job_lock=threading.Lock()
 _warm_worker=ResidentWorker(idle_timeout_seconds=COUNTGDPP_IDLE_TIMEOUT_SECONDS)
-CATEGORIES={'bamboo','cotton','rice','mung','coins','bamboo_sharp','chopsticks','rods','automatic'}
+CATEGORIES={'bamboo','cotton','rice','mung','coins','bamboo_sharp','chopsticks','rods','insects','automatic'}
 WARM_REQUEST_TIMEOUT_SECONDS=60
 
 def prewarm_model():
@@ -47,13 +47,19 @@ def readiness():
  return dict(installed=all(p.is_file() for p in required),missing=[str(p.relative_to(ROOT)) for p in required if not p.is_file()],
              runtime='isolated_subprocess',default_device='cpu',busy=_job_lock.locked(),**_warm_worker.snapshot())
 
-def detect_auto(image,category='bamboo',device='cpu',keep_warm=False):
- if category not in CATEGORIES:raise ValueError('未知计数对象，请选择竹签、棉头、米粒、绿豆或硬币。')
+def detect_auto(image,category='bamboo',device='cpu',keep_warm=False,allow_category_recovery=False,exemplar_points=None):
+ if category not in CATEGORIES:raise ValueError('未知计数对象。')
  if device not in {'cpu','auto','cuda'}:raise ValueError('未知运行设备。')
  if not isinstance(keep_warm,bool):raise ValueError('模型缓存开关必须是布尔值。')
+ if not isinstance(allow_category_recovery,bool):raise ValueError('自动重选类别开关必须是布尔值。')
  if keep_warm and device!='cuda':raise ValueError('模型常驻仅支持显式选择 GPU。')
  if not readiness()['installed']:raise RuntimeError('免框选模型未准备好，请运行 setup_auto.ps1。')
- return _execute(image,'countgdpp',device,dict(category=category),keep_warm=keep_warm)
+ settings=dict(category=category)
+ if allow_category_recovery:settings['allow_category_recovery']=True
+ if exemplar_points is not None:
+  from point_prompts import validate_exemplar_points
+  settings['exemplar_points']=validate_exemplar_points(exemplar_points,image.shape[1],image.shape[0])
+ return _execute(image,'countgdpp',device,settings,keep_warm=keep_warm)
 
 def release_model():
  if not _job_lock.acquire(blocking=False):raise RuntimeError('识别任务正在运行，完成后才能释放模型。')
@@ -83,6 +89,11 @@ def _execute(image,engine,device,settings,keep_warm=False):
    if engine=='countgdpp':
     command=[str(ROOT/'.venv-countgdpp/Scripts/python.exe'),str(ROOT/'countgdpp_worker.py'),str(source),
              '--category',settings['category'],'--device',device,'--output',str(result)]
+    if settings.get('allow_category_recovery'):command.append('--recover-category')
+    if 'exemplar_points' in settings:
+     references=folder/'exemplar_points.json'
+     references.write_text(json.dumps(settings['exemplar_points']),encoding='utf-8')
+     command.extend(['--exemplar-points-file',str(references)])
    else:
     request=folder/'settings.json';request.write_text(json.dumps(settings),encoding='utf-8')
     command=[str(ROOT/'.venv/Scripts/python.exe'),str(ROOT/'geco2_worker.py'),str(source),str(request),str(result),device]
@@ -92,7 +103,10 @@ def _execute(image,engine,device,settings,keep_warm=False):
    reused=False
    if keep_warm:
     command=[str(ROOT/'.venv-countgdpp/Scripts/python.exe'),str(ROOT/'countgdpp_worker.py'),'--serve','--device','cuda']
-    reused=_warm_worker.request(command,dict(image=str(source.resolve()),output=str(result.resolve()),category=settings['category']),
+    job=dict(image=str(source.resolve()),output=str(result.resolve()),category=settings['category'])
+    if settings.get('allow_category_recovery'):job['allow_category_recovery']=True
+    if 'exemplar_points' in settings:job['exemplar_points']=settings['exemplar_points']
+    reused=_warm_worker.request(command,job,
        cwd=ROOT,env=env,log_path=out/'countgdpp_server.log',timeout=WARM_REQUEST_TIMEOUT_SECONDS,creationflags=flags)
    else:
     try:

@@ -33,4 +33,14 @@
 
 旧 `engine/category/device` API 和 CLI 保留研究用途，不等同于默认网页路径。GPU 不可用时网页不静默使用可能等待数分钟的 CPU 深度推理；简单 CPU 路径仍可单独调用。
 
+自动路由给 `detect_auto` 设置 `allow_category_recovery=true`。仅原类别得到 `no_initial_exemplars` 或 `no_final_detections` 时，以同一设备、权重和阈值做一次支持目标的语义重选；只有不同类别且确有候选才采用。重选失败仍拒绝，不递归重试，不把模型加载、运行或超时异常当类别错误。元数据 `category_recovery` 保留原类别、失败原因、语义证据及是否采用。首次加载耗时与重选耗时合计，模型不重复加载。
+
+显式 API 默认不重选。主站自动 CPU 回退可发送 `{ "engine":"countgdpp", "category":"rice", "device":"cpu", "allow_category_recovery":true, "image":"..." }`；CLI 对应 `--recover-category`。手工 `--text` 不会被覆盖。此能力与原本严格限定的黄褐米提示回退独立，不放宽后者的阈值、三个去重种子或显式米粒要求。
+
+新增统一语义类别 `insects`（提示 `insect`），无需为每种昆虫增加分类权重。结果为 `insect_candidates`，必须保留 `review_required:true` 和 `count_is_total:false`；这不是专用昆虫模型，也不代表已解决翅膀重复和遮挡漏检。
+
+可选视觉输入 `exemplar_points` 的格式、坐标、严格校验和示例单次前向见[点选示例](POINT_EXAMPLES.md)。有当前请求选点时绕过分类、传统几何、文本自动示例与类别恢复；不能将离线人工参考作为输入。`point_prompts.py`只做无模型输入校验和方框换算，CountGD++仍在原隔离worker中运行。
+
+自动 `bamboo` 端面路径的 `end_face_review.py` 只在至少两个紧凑示例与明显长杆框同时存在时触发额外确认，使用同一图、同一自动示例和原阈值。确认提示为 `circular wooden end face`。仅大小接近且紧凑的密集端面采用0.7倍中位短边的近邻中心抑制；每对还要求短边尺寸比不超过1.5。尺寸混杂不作该合并，端面遮挡仍需核对。它不参与整杆、尖头、昆虫或手动点示例路径。
+
 上传上限20 MiB、解码后3000万像素；网页和API `no-store`。轮转请求日志只记状态、耗时与诊断，不记录图片或base64。服务只绑定本机；公网部署需另外设计鉴权、配额、TLS和队列。

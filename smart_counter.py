@@ -128,8 +128,25 @@ def review_sharp_predictions(result):
         meta['diagnosis'] = 'no_verified_sharp_regions'
 
 
-def detect_smart(image):
+def detect_smart(image,exemplar_points=None):
     started = time.perf_counter()
+    if exemplar_points is not None:
+        from point_prompts import validate_exemplar_points
+        from auto_counter import detect_auto
+        references = validate_exemplar_points(exemplar_points,image.shape[1],image.shape[0])
+        device = inference_device()
+        if device != 'cuda':
+            result = no_count(image,'gpu_resources_unavailable',
+                '当前GPU资源暂不可用，已保留点选示例；恢复后可按示例重新计数。')
+            result['meta'].update(manual_exemplars=True,exemplar_points=references,
+                routing='user_examples_runtime_unavailable',retryable=True,
+                required_free_gpu_mib=MIN_GPU_FREE_MIB)
+        else:
+            result = detect_auto(image,'automatic',device,keep_warm=True,
+                                 exemplar_points=references)
+            result['meta']['routing'] = 'user_points_then_visual_exemplars'
+        result['meta']['total_elapsed_seconds'] = round(time.perf_counter()-started,3)
+        return result
     from particle_gate import detect_separated
     preview = cv2.resize(image, (64, 64), interpolation=cv2.INTER_AREA)
     if float(preview.reshape(-1, 3).std(axis=0).max()) < 2.:
@@ -187,10 +204,13 @@ def detect_smart(image):
                     required_free_gpu_mib=MIN_GPU_FREE_MIB,
                     total_elapsed_seconds=round(time.perf_counter()-started, 3))
                 return result
-            result = detect_auto(image, category or 'automatic', device, keep_warm=device == 'cuda')
+            result = detect_auto(image, category or 'automatic', device, keep_warm=device == 'cuda',
+                                 allow_category_recovery=True)
             meta = result['meta']
             meta['scene_classification'] = hint
-            meta['routing'] = 'cpu_scene_hint_then_counting' if category else 'automatic_category_after_geometry_gate'
+            meta['routing'] = ('empty_scene_hint_then_semantic_recovery'
+                               if (meta.get('category_recovery') or {}).get('accepted') else
+                               ('cpu_scene_hint_then_counting' if category else 'automatic_category_after_geometry_gate'))
             if not meta.get('prediction_valid', bool(result['points'])):
                 result['count'] = None
                 meta.setdefault('user_message', '本次没有找到可靠目标，请换一张目标清晰、遮挡更少的照片。')

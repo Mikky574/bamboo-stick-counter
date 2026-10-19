@@ -42,6 +42,8 @@
 
 ## 常见问题
 
+**迁移后CPU似乎没启动：** 按[CPU分层排查](CPU_TROUBLESHOOTING.md)运行`diagnose_cpu.ps1`。原版完整启动与smart深度分支要求GPU，独立CPU worker可运行；需要分别验证解释器/依赖、资产、实际前向和业务路由。`no_initial_exemplars`表示前向已完成，不是CPU启动失败。工具只产生本地报告，不启动网页或GPU模型。
+
 **首次启动慢：** 模型读取、CUDA初始化及基础前向预热在启动阶段完成，本机约8秒；磁盘、驱动和硬件不同可更久。之后模型持续常驻，换图仍重新计算。
 
 **页面等待久：** 核对请求ID、`model_load_seconds`、分类加载耗时、`cache_reused`和诊断。资源释放或worker失败后可能重新加载；`no_initial_exemplars`表示没找到目标，不等于GPU卡死。网页100秒后恢复按钮，后台可能仍在处理，不要连续重复提交。

@@ -14,9 +14,12 @@ node verify_frontend.cjs
 ```powershell
 .venv-countgdpp\Scripts\python.exe -m pip install -r requirements.txt
 .venv-countgdpp\Scripts\python.exe -m unittest verify_model_startup verify_rice_prompt_fallback -v
+.venv-countgdpp\Scripts\python.exe -m unittest verify_category_recovery verify_point_prompts verify_end_face_review verify_cpu_diagnostics -v
 ```
 
 这两组只使用CPU张量及模拟模型，验证启动前后顺序、两种前向预热、至少三个不同种子、保持阈值及失败候选口径。Windows服务控制器还有独立临时目录集成测试，覆盖端口冲突、重复启动、预热失败／超时、启动中停止和无关哨兵存活。
+
+新增四组验证有界类别恢复、点示例原像素缩放与真实视觉前向参数、端面确认的适用范围，以及CPU诊断子进程和超时清理。它们不读取开发照片、不加载权重；`verify_cpu_diagnostics`会创建自己的临时子进程和哨兵。页面脚本包含19项模拟交互检查，不能代替真实浏览器验收。
 
 ## 本地完整回归
 
@@ -25,6 +28,8 @@ node verify_frontend.cjs
 人工真值与预测必须独立保存，计数代码不可读取 `truth`、文件名或样本ID决定数量。已有清晰开发图结果：分散米粒30、绿豆17、硬币8，规则礼盒10／10、近景可见端面4，橙色背板10；某些交叉、相贴、模糊和重压缩输入仍拒绝。
 
 黄褐米原图343是候选数。独立先看原图在两块局部标17粒，全部匹配且未见同粒重复，但整图没有完整真值。同源变换输出345–348，边界、遮挡和检测仍有差异；局部核对不支持整图准确或100%精度结论。
+
+2026-10-19两张端面开发照片的原图和JPEG92版本经真实接口验证为91／50，与独立可见端面参考逐个匹配。正面图的点选示例在GPU和CPU上均输出50；斜视图的手动示例仍可能漏检或误检，不能保证比自动路径更准。昆虫候选仍有漏检与翅膀误检，总数相同不算逐实例准确。详细范围见[点选示例](POINT_EXAMPLES.md)与[昆虫说明](INSECT_COUNTING.md)。
 
 ## 性能和发布验收
 

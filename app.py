@@ -127,9 +127,16 @@ def count():
     try:
         data=request.get_json(); im=decode(data['image'])
         engine=data.get('engine','smart')
+        references=data.get('exemplar_points')
+        if 'exemplar_points' in data:
+            from point_prompts import validate_exemplar_points
+            references=validate_exemplar_points(references,im.shape[1],im.shape[0])
+            if engine not in {'smart','auto','countgdpp'}:
+                raise ValueError('点选示例仅适用于自动或CountGD++计数。')
         if engine=='smart' or (engine=='auto' and not data.get('category')):
             from smart_counter import detect_smart
-            return jsonify(detect_smart(im))
+            return jsonify(detect_smart(im,exemplar_points=references) if references is not None else detect_smart(im))
+        if references is not None:engine='countgdpp'
         if engine=='auto':
             if data.get('category','bamboo') in {'rice','coins'}:
                 if data.get('category')=='rice' and data.get('rice_layout','separated')!='separated':
@@ -139,7 +146,9 @@ def count():
         if engine=='countgdpp':
             from auto_counter import detect_auto
             return jsonify(detect_auto(im,data.get('category','bamboo'),data.get('device','cpu'),
-                                       keep_warm=data.get('keep_warm',False)))
+                                       keep_warm=data.get('keep_warm',False),
+                                       allow_category_recovery=data.get('allow_category_recovery',False),
+                                       **({'exemplar_points':references} if references is not None else {})))
         if engine=='beans':
             if data.get('category')!='mung':raise ValueError('绿豆颜色模式仅用于绿豆；其他目标请选择对应模式。')
             from mung_counter import detect_mung
